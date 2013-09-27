@@ -1,4 +1,4 @@
-awget
-=====
+Nate Gillard
+CS457 Papadopoulos
 
-Anonymous wget using stepping stones proxies.  
+
