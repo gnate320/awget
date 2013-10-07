@@ -7,12 +7,19 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>  //for the damned memset(), stupid C crap.
+#include <time.h>
 
 #define HN_SIZE 63
 #define PORT_LEN 6
 #define PORT_MIN 1024
 #define PORT_MAX 65535
+
+int getRandomPort()
+{
+	return rand() % (PORT_MAX-PORT_MIN) + PORT_MIN;
+}
 
 int prepSocket(const char* hostname, const char* port,
  	char *ipstr, int strsize)
