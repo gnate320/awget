@@ -11,15 +11,22 @@ int main(int argc, const char *argv[]) {
 	
 	//check for port option.
 	int p = -1;
+	char* opt;
 	if (argc == 3)
 	{
 		if (getopt(argc, argv, "p:") == int('p'))
-			p = optarg;
-        printf("getopt found: %d \n", p);
-		if (p > PORT_MIN && p < PORT_MAX)
-			sprintf(incPort, "%d", p);
-		else
+		{
+			opt = optarg;
+			p = atoi(optarg);
+		}
+		else		
+       		p = -1;
+		
+		if (p < PORT_MIN || p > PORT_MAX)
+		{
+			printf("Port out of range. Choosing random port...\n");
 			p = -1;
+		}
 	}
 	else 
 		p = -1;
@@ -34,6 +41,10 @@ int main(int argc, const char *argv[]) {
 		int r = getRandomPort();
 		sprintf(incPort, "%d", r);  
 	}
+	else
+	{	
+		sprintf(incPort, "%d", p);
+	}	
 	
 	//get my name and set up a socket for incoming connections.
 	gethostname(myName, HN_SIZE);
@@ -41,8 +52,7 @@ int main(int argc, const char *argv[]) {
 	
 	//display Stepping Stone information
 	printf("%s listening on	%s\n", myIPstr, incPort);
-
-
+	
 	
 	close(conSock);
 	return 0;

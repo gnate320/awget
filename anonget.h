@@ -13,6 +13,7 @@
 
 #define HN_SIZE 63
 #define PORT_LEN 6
+#define SERV_QS 5
 #define PORT_MIN 1024
 #define PORT_MAX 65535
 
