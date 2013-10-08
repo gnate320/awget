@@ -53,6 +53,55 @@ int main(int argc, const char *argv[]) {
 	//display Stepping Stone information
 	printf("%s listening on	%s\n", myIPstr, incPort);
 	
+	//wait for a connection.
+	if (listen(conSock, SERV_QS) == -1)
+	{
+		printf("Listen failed...");
+		close(conSock);
+		return 1;	
+	}
+	
+	//TODO LOOP and Fork!!
+	printf("Stepping Stone waiting for requests...");
+
+	struct sockaddr_storage incReqAddr;		//address info for incoming request
+	socklen_t incReqSockSize = sizeof(incReqAddr)
+	int incRequestSock = accept(conSock, (struct sockaddr *) &tincReqAddr, &incReqSockSize);
+	char incReqIP[INET6_ADDRSTRLEN];
+
+	if (incRequestSock == -1)
+	{
+		printf("Error accepting request...");
+		close(conSock);
+		close(incRequestSock);
+		//TODO:  Don't exit program, just jump back to top of loop
+		return 1;
+	}
+	
+	//translate the addr struct to an string with IP
+	inet_ntop(incReqAddr.ss_family,
+		getIP((struct sockaddr *)&incReqAddr),
+		incReqIP, sizeof(incReqIP));
+	print("Got a request from %s", incReqIP);
+
+	//TODO FORK HERE! 
+	//TODO close conSock for child
+	//TODO recv() stepping stone list + request.
+	//TODO remove THIS Stepping stone IP form the list
+	
+	//TODO if !lastSS :
+		//TODO look up next SS
+		//TODO Connect to next SS
+		//TODO send SS list with request
+		//TODO recv() file "package" as "result"
+	//TODO else lastSS
+		//TODO system.wget(request)
+		//TODO "package" as "result"
+	
+	//TODO send(result) to incRequestSock
+	//if (send(incRequestSock, "Hello from " + incReqIP + " ", 	
+
+	close(incRequestSock)
 	
 	close(conSock);
 	return 0;
