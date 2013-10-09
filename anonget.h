@@ -16,10 +16,20 @@
 #define SERV_QS 5
 #define PORT_MIN 1024
 #define PORT_MAX 65535
+#define SSLIST_SIZE 1000
 
 int getRandomPort()
 {
 	return rand() % (PORT_MAX-PORT_MIN) + PORT_MIN;
+}
+
+void *getIP(struct sockaddr * sa)
+{
+	if (sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in*)sa)->sin_addr);
+    }
+
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
 int prepSocket(const char* hostname, const char* port,
@@ -27,7 +37,6 @@ int prepSocket(const char* hostname, const char* port,
 {
 	struct addrinfo hints;
     struct addrinfo *myAddrResults, *rp;	
-	char myIPstr[INET6_ADDRSTRLEN];	
 	void *addr;
 	int sockFD = -1;
 	int yes = 1;

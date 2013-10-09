@@ -65,8 +65,8 @@ int main(int argc, const char *argv[]) {
 	printf("Stepping Stone waiting for requests...");
 
 	struct sockaddr_storage incReqAddr;		//address info for incoming request
-	socklen_t incReqSockSize = sizeof(incReqAddr)
-	int incRequestSock = accept(conSock, (struct sockaddr *) &tincReqAddr, &incReqSockSize);
+	socklen_t incReqSockSize = sizeof(incReqAddr);
+	int incRequestSock = accept(conSock, (struct sockaddr *) &incReqAddr, &incReqSockSize);
 	char incReqIP[INET6_ADDRSTRLEN];
 
 	if (incRequestSock == -1)
@@ -82,7 +82,7 @@ int main(int argc, const char *argv[]) {
 	inet_ntop(incReqAddr.ss_family,
 		getIP((struct sockaddr *)&incReqAddr),
 		incReqIP, sizeof(incReqIP));
-	print("Got a request from %s", incReqIP);
+	printf("Got a request from %s", incReqIP);
 
 	//TODO FORK HERE! 
 	//TODO close conSock for child
@@ -99,9 +99,18 @@ int main(int argc, const char *argv[]) {
 		//TODO "package" as "result"
 	
 	//TODO send(result) to incRequestSock
-	//if (send(incRequestSock, "Hello from " + incReqIP + " ", 	
-
-	close(incRequestSock)
+	
+	char sslist[SSLIST_SIZE];
+	memset(sslist, '\0', SSLIST_SIZE);
+	strcat(sslist, "hello, from ");
+	strcat(sslist, myIPstr); 
+	if (send(incRequestSock, sslist, strlen(sslist), 0) == -1) 
+	{
+		printf("Error sending to %s", incReqIP);
+	}	
+	
+	
+	close(incRequestSock);
 	
 	close(conSock);
 	return 0;
