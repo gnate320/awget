@@ -33,7 +33,7 @@ void *getIP(struct sockaddr * sa)
 }
 
 int prepSocket(const char* hostname, const char* port,
- 	char *ipstr, int strsize)
+ 	char *ipstr, int strsize, bool bFlag)
 {
 	struct addrinfo hints;
     struct addrinfo *myAddrResults, *rp;	
@@ -45,6 +45,7 @@ int prepSocket(const char* hostname, const char* port,
 	hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
+	
 	if (getaddrinfo(hostname, port, &hints, &myAddrResults) != 0)
 	{
 		printf("Error establshing socket to host named %s on port %s", 
@@ -60,20 +61,31 @@ int prepSocket(const char* hostname, const char* port,
 			printf("Could not bind host to a socket.");
 			continue;
 		}
-		
-		if (setsockopt(sockFD, SOL_SOCKET, SO_REUSEADDR,
-			 &yes, sizeof(int)) == -1)
+			
+		if (bFlag)
 		{
-			printf("Could not set the socket options.");
-			close(sockFD);
-			return -1;
+			if (setsockopt(sockFD, SOL_SOCKET, SO_REUSEADDR,
+				&yes, sizeof(int)) == -1)
+			{
+				printf("Could not set the socket options.");
+				close(sockFD);
+				return -1;
+			}
+			if (bind(sockFD, rp->ai_addr, rp->ai_addrlen) == -1)
+			{	
+				close(sockFD);
+				printf("Could not bind host %s to port %s.", hostname, port);
+				continue;
+			}
 		}
-		
-		if (bind(sockFD, rp->ai_addr, rp->ai_addrlen) == -1)
+		else
 		{
-			close(sockFD);
-			printf("Could not bind host %s to port %s.", hostname, port);
-			continue;
+			if (connect(sockFD, rp->ai_addr, rp->ai_addrlen) == -1) 
+			{
+            	close(sockFD);
+            	printf("Could not connect to %s to port %s.", hostname, port);
+            	continue;
+        	}
 		}
 		
 		//get the addr as a string.

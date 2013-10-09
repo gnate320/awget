@@ -6,7 +6,9 @@ int main(int argc, const char *argv[]) {
 	char myIP[INET6_ADDRSTRLEN];
 	int toSS;
 
-	toSS = prepSocket("cabbage.cs.colosate.edu", "4649", myIP, sizeof(myIP));
+	toSS = prepSocket("cabbage.cs.colostate.edu", "4649", myIP, sizeof(myIP), false);
+
+	printf("connected?");
 	
 	send(toSS, myIP, strlen(myIP), 0);
 
@@ -16,6 +18,8 @@ int main(int argc, const char *argv[]) {
         perror("recv");
         exit(1);
     }
+	
+	printf("Stepping Stone says: %s\n", reply);
 
 	close(toSS);
 }
