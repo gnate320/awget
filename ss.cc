@@ -62,7 +62,7 @@ int main(int argc, const char *argv[]) {
 		return 1;	
 	}
 	
-	while (1) 
+	while (true) 
 	{
 		printf("Stepping Stone waiting for requests...");
 
