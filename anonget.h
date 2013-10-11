@@ -32,12 +32,100 @@ void *getIP(struct sockaddr * sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int prepSocket(const char* hostname, const char* port,
- 	char *ipstr, int strsize, bool bFlag)
+int getHostIP(const char* hostname, char ip[INET6_ADDRSTRLEN])
+{
+	struct addrinfo hints, *res, *rp;
+    int status;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if ((status = getaddrinfo(hostname, NULL, &hints, &res) !=0 ))
+	{
+		printf("Could not find an IP address for %s", hostname);
+		return -1;
+	}	
+
+	for(rp = res; rp != NULL; rp = rp->ai_next)
+	{
+		void *addr;
+		if (rp->ai_family == AF_INET)
+		{
+			struct sockaddr_in *ipv4 = (struct sockaddr_in *)rp->ai_addr;
+			addr = &(ipv4->sin_addr);
+		}
+		else
+		{
+			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)rp->ai_addr;
+			addr = &(ipv6->sin6_addr);
+		}
+
+		inet_ntop(rp->ai_family, addr, ip, sizeof(ip));
+	}	
+}
+
+int prepListenSocket(const char* port)
+{
+	struct addrinfo hints;
+    struct addrinfo *servResults, *rp;	
+	int sockFD = -1;
+	int yes = 1;
+
+	memset(&hints, 0, sizeof(struct addrinfo));	
+	hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	if (getaddrinfo(NULL, port, &hints, &servResults) != 0)
+	{
+		printf("Error establshing socket for accepting connections on port %s", port);
+		return -1;
+	} 
+	
+	for (rp = servResults; rp != NULL; rp = rp->ai_next)
+	{
+		sockFD = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if (sockFD == -1)
+		{
+			printf("Could not bind host to a socket.");
+			continue;
+		}
+			
+		if (setsockopt(sockFD, SOL_SOCKET, SO_REUSEADDR,
+			&yes, sizeof(int)) == -1)
+		{
+			printf("Could not set the socket options.");
+			close(sockFD);
+			return -1;
+		}
+		
+		if (bind(sockFD, rp->ai_addr, rp->ai_addrlen) == -1)
+		{	
+			close(sockFD);
+			printf("Could not bind to port %s.", port);
+			continue;
+		}
+				
+		break;
+	}
+	
+	if (rp == NULL) 
+	{
+		printf("Unable to create listening socket on port %s", port);
+		return -1;
+	}
+
+	freeaddrinfo(servResults);
+	
+	return sockFD;
+}
+
+
+int prepConnectedSocket(const char* hostname, const char* port)
 {
 	struct addrinfo hints;
     struct addrinfo *myAddrResults, *rp;	
-	void *addr;
 	int sockFD = -1;
 	int yes = 1;
 
@@ -61,44 +149,13 @@ int prepSocket(const char* hostname, const char* port,
 			printf("Could not bind host to a socket.");
 			continue;
 		}
-			
-		if (bFlag)
+				
+		if (connect(sockFD, rp->ai_addr, rp->ai_addrlen) == -1) 
 		{
-			if (setsockopt(sockFD, SOL_SOCKET, SO_REUSEADDR,
-				&yes, sizeof(int)) == -1)
-			{
-				printf("Could not set the socket options.");
-				close(sockFD);
-				return -1;
-			}
-			if (bind(sockFD, rp->ai_addr, rp->ai_addrlen) == -1)
-			{	
-				close(sockFD);
-				printf("Could not bind host %s to port %s.", hostname, port);
-				continue;
-			}
-		}
-		else
-		{
-			if (connect(sockFD, rp->ai_addr, rp->ai_addrlen) == -1) 
-			{
-            	close(sockFD);
-            	printf("Could not connect to %s to port %s.", hostname, port);
-            	continue;
-        	}
-		}
-		
-		//get the addr as a string.
-		if (rp->ai_family == AF_INET)  //IPv4 addr
-		{
-			struct sockaddr_in *ipv4 = (struct sockaddr_in *)rp->ai_addr;
-			addr = &(ipv4 ->sin_addr);
-		}
-		else						   //IPV6 addr
-		{
-			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)rp->ai_addr;
-			addr = &(ipv6->sin6_addr);
-		}
+            close(sockFD);
+            printf("Could not connect to %s to port %s.", hostname, port);
+            continue;
+        }	
 				
 		break;
 	}
@@ -108,9 +165,6 @@ int prepSocket(const char* hostname, const char* port,
 		printf("could not locate host %s", hostname);
 		return -1;
 	}
-
-	//conver IP to string
-	inet_ntop(rp->ai_family, addr, ipstr, strsize);
 
 	freeaddrinfo(myAddrResults);
 	

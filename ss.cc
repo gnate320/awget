@@ -48,7 +48,8 @@ int main(int argc, const char *argv[]) {
 	
 	//get my name and set up a socket for incoming connections.
 	gethostname(myName, HN_SIZE);
-	conSock = prepSocket(myName, incPort, myIPstr, sizeof(myIPstr), true); 
+	getHostIP(myName, myIPstr);
+	conSock = prepListenSocket(incPort); 
 	
 	//display Stepping Stone information
 	printf("%s listening on	%s\n", myIPstr, incPort);

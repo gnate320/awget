@@ -3,14 +3,17 @@
 using namespace std;
 
 int main(int argc, const char *argv[]) {
-	char myIP[INET6_ADDRSTRLEN];
+	char myName[HN_SIZE];
+	char myIPstr[INET6_ADDRSTRLEN];
 	int toSS;
 
-	toSS = prepSocket("cabbage.cs.colostate.edu", "4649", myIP, sizeof(myIP), false);
+	gethostname(myName, HN_SIZE);
+	getHostIP(myName, myIPstr);
+	toSS = prepConnectedSocket("cabbage.cs.colostate.edu", "4649");	
 
 	printf("connected?");
 	
-	send(toSS, myIP, strlen(myIP), 0);
+	send(toSS, myIPstr, strlen(myIPstr), 0);
 
 	char reply[SSLIST_SIZE];
 	int numbytes;
