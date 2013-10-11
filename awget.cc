@@ -13,7 +13,8 @@ int main(int argc, const char *argv[]) {
 	toSS = prepConnectedSocket("Nataku-U52F", "4649");	
 	printf("connected?");
 	
-	send(toSS, myIPstr, strlen(myIPstr), 0);
+	//send(toSS, myIPstr, strlen(myIPstr), 0);
+	sendFileToSocket("chaingang", toSS);	
 
 	char reply[SSLIST_SIZE];
 	int numbytes;

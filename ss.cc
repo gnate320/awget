@@ -62,14 +62,19 @@ int main(int argc, const char *argv[]) {
 			incReqIP, sizeof(incReqIP));
 		
 		if (!fork())
-		{ 
+		{
+			// close conSock in child
 			close(conSock);
 			printf("Got a request from %s\n", incReqIP);
-			//TODO close conSock for child
+			
 			//TODO recv() stepping stone list + request.
+			
+			recvFileFromSocket("gang", incRequestSock);
+			
 			char sslist[SSLIST_SIZE];
 			memset(sslist, '\0', SSLIST_SIZE);	
-			recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
+			//recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
+			
 			//TODO remove THIS Stepping stone IP form the list
 			
 			//TODO if !lastSS :

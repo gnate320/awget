@@ -5,10 +5,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <errno.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <sys/wait.h>
 #include <string.h>  //for the damned memset(), stupid C crap.
 #include <time.h>
 
@@ -17,7 +19,8 @@
 #define SERV_QS 5
 #define PORT_MIN 1024
 #define PORT_MAX 65535
-#define SSLIST_SIZE 1000
+#define SSLIST_SIZE 2048
+#define FBUFF_SIZE	512
 
 int getRandomPort()
 {
@@ -228,4 +231,91 @@ int prepConnectedSocket(const char* hostname, const char* port)
 	return sockFD;
 }
 
+//This function is inpired by TWO StackOverFlow post:
+//http://stackoverflow.com/questions/5594042/c-send-file-to-socket
+//http://stackoverflow.com/questions/11952898/c-send-and-receive-file
+//Usage:  Send a given file (fname), to a socket (outSock).
+bool sendFileToSocket(char *fname, int outSock)
+{
+	
+	FILE *fin = fopen(fname, "r");
+	char fdata[FBUFF_SIZE];
+    struct stat fstats;
+	fstat(fin, &fstats); 
+	
+	if (fstats.st_size < 1)
+	{
+		printf("Error sending file '%s' 0 size?\n", fname);
+		return false;
+	}    
+
+	//send the file length
+	memset(fdata, '\0', FBUFF_SIZE);
+	sprintf(fdata, "%d", fstats.st_size);
+
+	//TODO loop>?
+	int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	if (len < 0 )
+	{
+		printf("Could not send file size for '%s'\n", fname);
+		return false;
+	}
+	
+	size_t nbytes = 0;				//read this iteration
+	size_t tbytes = 0;				//read total
+	while ( (nbytes = fread(fdata, sizeof(char), FBUFF_SIZE, fin) ) > 0 /*&&
+			(tbytes < fstats.st_size) */)
+	{
+		tbytes += nbytes;
+		int offset = 0;
+		int sent = 0;
+		while ( (sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
+				(sent == -1 && errno == EINTR) )
+		{
+			if (sent > 0) 
+			{
+				offset += sent;
+				nbytes -= sent;
+			}
+		}
+	}	
+	
+	fclose(fin);
+
+	return true;
+}
+
+//this function is inspired by two StackOverFlow threads
+//http://stackoverflow.com/questions/11952898/c-send-and-receive-file
+//
+//Usage: get a file (fname) from a socket (inSock).
+bool recvFileFromSocket(char* fname, int inSock)
+{
+	FILE *fout = fopen(fname, "w");
+	char fdata[FBUFF_SIZE];
+
+	memset(fdata, '\0', FBUFF_SIZE);
+	int len = recv(inSock, fdata, FBUFF_SIZE, 0);
+	if (len < 0)
+	{
+		printf("error recieving file size for %s\n", fname);
+	}
+	int fsize = atoi(fdata);	
+	
+	int nbytes = 0;			//bytes this iteration
+	int tbytes = 0; 		//total bytes
+	do
+	{
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
+		if (nbytes > 0)
+		{
+			fwrite(fdata, sizeof(char), nbytes, fout);
+			tbytes += nbytes;	
+		}
+	} while (tbytes < fsize);
+
+	fclose(fout);
+
+	return true;
+}
 #endif
