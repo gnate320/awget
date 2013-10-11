@@ -1,13 +1,14 @@
 #ifndef ANONGET
 #define ANONGET  0
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/wait.h>
 #include <string.h>  //for the damned memset(), stupid C crap.
 #include <time.h>
 
@@ -23,6 +24,59 @@ int getRandomPort()
 	return rand() % (PORT_MAX-PORT_MIN) + PORT_MIN;
 }
 
+int getPort(int c, char* v[])
+{
+	//check for port option.
+	char *opt;
+	int p = -1;
+	if (c == 3)
+	{
+		if (getopt(c, v, "p:") == int('p'))
+		{
+			opt = optarg;
+			p = atoi(optarg);
+		}
+		else		
+       		p = -1;
+		
+		if (p < PORT_MIN || p > PORT_MAX)
+		{
+			printf("Port out of range. Choosing random port...\n");
+			p = -1;
+		}
+	}
+	else 
+		p = -1;
+
+	//If we don't have a valid port get a random one.
+	if (p == -1)
+	{
+		//If they put too many or too few args let them know.
+    	if ( (c > 1 && c < 3) || c > 3)
+        {
+			printf("Usage: ss [-p port]\n");
+			printf("Choosing random port...\n");
+		}
+		//Just give them a random port.
+		int r = getRandomPort();
+		return r;
+	}
+	else
+	{
+		return p;	
+	}
+}
+
+
+//Borrowed from Beej's guide used to "reap dead processes"
+//http://beej.us/guide/bgnet/output/html/multipage/clientserver.html#simpleserver
+void sigchld_handler(int s)
+{
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+//Borrowed from Beej's guide used to get an IP address from a struct of addrinfo
+//http://beej.us/guide/bgnet/output/html/multipage/clientserver.html#simpleserver
 void *getIP(struct sockaddr * sa)
 {
 	if (sa->sa_family == AF_INET) {

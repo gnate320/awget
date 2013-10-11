@@ -7,45 +7,11 @@ int main(int argc, const char *argv[]) {
 	char myIPstr[INET6_ADDRSTRLEN];	
 	char incPort[PORT_LEN];    //the destination port for incoming connections.
 	int conSock;		//connection sock. Socket for incoming connections on.
-    srand(time(NULL));
+    srand(time(NULL));	
 	
-	//check for port option.
-	int p = -1;
-	char* opt;
-	if (argc == 3)
-	{
-		if (getopt(argc, argv, "p:") == int('p'))
-		{
-			opt = optarg;
-			p = atoi(optarg);
-		}
-		else		
-       		p = -1;
-		
-		if (p < PORT_MIN || p > PORT_MAX)
-		{
-			printf("Port out of range. Choosing random port...\n");
-			p = -1;
-		}
-	}
-	else 
-		p = -1;
+	int p = getPort(argc, argv);
+	sprintf(incPort, "%d", p);	
 
-	//If we don't have a valid port get a random one.
-	if (p == -1)
-	{
-		//If they put too many or too few args let them know.
-    	if ( (argc > 1 && argc < 3) || argc > 3)
-        	printf("Unrecognized command line arguments. Choosing random port...");
-		//Just give them a random port.
-		int r = getRandomPort();
-		sprintf(incPort, "%d", r);  
-	}
-	else
-	{	
-		sprintf(incPort, "%d", p);
-	}	
-	
 	//get my name and set up a socket for incoming connections.
 	gethostname(myName, HN_SIZE);
 	getHostIP(myName, myIPstr);
@@ -62,9 +28,19 @@ int main(int argc, const char *argv[]) {
 		return 1;	
 	}
 	
+	struct sigaction sa;
+	sa.sa_handler = sigchld_handler;  //beej says reap dead processes	
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (sigaction(SIGCHLD, &sa, NULL) == -1) 
+	{
+		printf("Error killing dead processes!?!?");
+		close(conSock);
+		exit(1);
+	}	
+
 	while (true) 
 	{
-		printf("Stepping Stone waiting for requests...");
 
 		struct sockaddr_storage incReqAddr;		//address info for incoming request
 		socklen_t incReqSockSize = sizeof(incReqAddr);
@@ -84,32 +60,38 @@ int main(int argc, const char *argv[]) {
 		inet_ntop(incReqAddr.ss_family,
 			getIP((struct sockaddr *)&incReqAddr),
 			incReqIP, sizeof(incReqIP));
-		printf("Got a request from %s", incReqIP);
-		//TODO FORK HERE! 
-		//TODO close conSock for child
-		//TODO recv() stepping stone list + request.
-		char sslist[SSLIST_SIZE];
-		memset(sslist, '\0', SSLIST_SIZE);	
-		recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
-		//TODO remove THIS Stepping stone IP form the list
-			
-		//TODO if !lastSS :
-			//TODO look up next SS
-			//TODO Connect to next SS
-			//TODO send SS list with request
-			//TODO recv() file "package" as "result"
-		//TODO else lastSS
-			//TODO system.wget(request)
-			//TODO "package" as "result"
-			
-		//TODO send(result) to incRequestSock
 		
-		strcat(sslist, "hello, from ");
-		strcat(sslist, myIPstr); 
-		if (send(incRequestSock, sslist, strlen(sslist), 0) == -1) 
-		{
-			printf("Error sending to %s", incReqIP);
-		}		
+		if (!fork())
+		{ 
+			close(conSock);
+			printf("Got a request from %s\n", incReqIP);
+			//TODO close conSock for child
+			//TODO recv() stepping stone list + request.
+			char sslist[SSLIST_SIZE];
+			memset(sslist, '\0', SSLIST_SIZE);	
+			recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
+			//TODO remove THIS Stepping stone IP form the list
+			
+			//TODO if !lastSS :
+				//TODO look up next SS
+				//TODO Connect to next SS
+				//TODO send SS list with request
+				//TODO recv() file "package" as "result"
+			//TODO else lastSS
+				//TODO system.wget(request)
+				//TODO "package" as "result"
+			
+			//TODO send(result) to incRequestSock
+		
+			strcat(sslist, " Hello! I'm Stepping Stone ");
+			strcat(sslist, myIPstr); 
+			if (send(incRequestSock, sslist, strlen(sslist), 0) == -1) 
+			{
+				printf("Error sending to %s", incReqIP);
+			}		
+			close(incRequestSock);
+			exit(0);
+		}
 		close(incRequestSock);
 	}
 
