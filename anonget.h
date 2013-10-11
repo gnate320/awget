@@ -32,7 +32,7 @@ void *getIP(struct sockaddr * sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int getHostIP(const char* hostname, char ip[INET6_ADDRSTRLEN])
+int getHostIP(const char* hostname, char *ip)
 {
 	struct addrinfo hints, *res, *rp;
     int status;
@@ -61,7 +61,7 @@ int getHostIP(const char* hostname, char ip[INET6_ADDRSTRLEN])
 			addr = &(ipv6->sin6_addr);
 		}
 
-		if (inet_ntop(rp->ai_family, addr, ip, sizeof(ip)) != NULL)
+		if (inet_ntop(rp->ai_family, addr, ip, INET6_ADDRSTRLEN) != NULL)
 			return 0;
 	}	
 
