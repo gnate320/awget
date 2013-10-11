@@ -155,7 +155,7 @@ int prepConnectedSocket(const char* hostname, const char* port)
 				
 		if (connect(sockFD, rp->ai_addr, rp->ai_addrlen) == -1) 
 		{
-            close(sockFD);
+            //close(sockFD);
             printf("Could not connect to %s to port %s.", hostname, port);
             continue;
         }	

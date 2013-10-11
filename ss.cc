@@ -80,7 +80,7 @@ int main(int argc, const char *argv[]) {
 			return 1;
 		}
 			
-		//translate the addr struct to an string with IP
+		//translate the addr struct to a string with IP
 		inet_ntop(incReqAddr.ss_family,
 			getIP((struct sockaddr *)&incReqAddr),
 			incReqIP, sizeof(incReqIP));
@@ -88,6 +88,9 @@ int main(int argc, const char *argv[]) {
 		//TODO FORK HERE! 
 		//TODO close conSock for child
 		//TODO recv() stepping stone list + request.
+		char sslist[SSLIST_SIZE];
+		memset(sslist, '\0', SSLIST_SIZE);	
+		recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
 		//TODO remove THIS Stepping stone IP form the list
 			
 		//TODO if !lastSS :
@@ -101,8 +104,6 @@ int main(int argc, const char *argv[]) {
 			
 		//TODO send(result) to incRequestSock
 		
-		char sslist[SSLIST_SIZE];
-		memset(sslist, '\0', SSLIST_SIZE);
 		strcat(sslist, "hello, from ");
 		strcat(sslist, myIPstr); 
 		if (send(incRequestSock, sslist, strlen(sslist), 0) == -1) 

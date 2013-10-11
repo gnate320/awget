@@ -9,8 +9,8 @@ int main(int argc, const char *argv[]) {
 
 	gethostname(myName, HN_SIZE);
 	getHostIP(myName, myIPstr);
-	toSS = prepConnectedSocket("cabbage.cs.colostate.edu", "4649");	
-
+	//toSS = prepConnectedSocket("cabbage.cs.colostate.edu", "4649");	
+	toSS = prepConnectedSocket("Nataku-U52F", "4649");	
 	printf("connected?");
 	
 	send(toSS, myIPstr, strlen(myIPstr), 0);
