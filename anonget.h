@@ -61,8 +61,11 @@ int getHostIP(const char* hostname, char ip[INET6_ADDRSTRLEN])
 			addr = &(ipv6->sin6_addr);
 		}
 
-		inet_ntop(rp->ai_family, addr, ip, sizeof(ip));
+		if (inet_ntop(rp->ai_family, addr, ip, sizeof(ip)) != NULL)
+			return 0;
 	}	
+
+	return -1;
 }
 
 int prepListenSocket(const char* port)
