@@ -19,7 +19,8 @@
 #define SERV_QS 5
 #define PORT_MIN 1024
 #define PORT_MAX 65535
-#define SSLIST_SIZE 2048
+#define SSLIST_SIZE 6144
+#define MAX_URL 1024
 #define FBUFF_SIZE	512
 
 int getRandomPort()
@@ -299,6 +300,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 	if (len < 0)
 	{
 		printf("error recieving file size for %s\n", fname);
+		return false;
 	}
 	int fsize = atoi(fdata);	
 	
@@ -315,6 +317,34 @@ bool recvFileFromSocket(char* fname, int inSock)
 	} while (tbytes < fsize);
 
 	fclose(fout);
+
+	return true;
+}
+
+bool recvStringFromSocket(char *message, int inSock)
+{
+	char fdata[FBUFF_SIZE];
+
+	memset(fdata, '\0', FBUFF_SIZE);
+	int len = recv(inSock, fdata, FBUFF_SIZE, 0);
+	if (len < 0)
+	{
+		printf("error recieving message size\n");
+		return false;
+	}
+	int fsize = atoi(fdata);	
+	
+	int nbytes = 0;			//bytes this iteration
+	int tbytes = 0; 		//total bytes
+	do
+	{
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
+		if (nbytes > 0)
+		{
+			strncat(message, fdata, nbytes);
+			tbytes += nbytes;	
+		}
+	} while (tbytes < fsize);
 
 	return true;
 }

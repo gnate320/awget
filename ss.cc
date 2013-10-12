@@ -67,14 +67,17 @@ int main(int argc, const char *argv[]) {
 			close(conSock);
 			printf("Got a request from %s\n", incReqIP);
 			
-			//TODO recv() stepping stone list + request.
-			
-			recvFileFromSocket("gang", incRequestSock);
+			//recv() stepping stone list + request.
 			
 			char sslist[SSLIST_SIZE];
 			memset(sslist, '\0', SSLIST_SIZE);	
+			recvStringFromSocket(sslist, incRequestSock);	
 			//recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
-			
+
+			char request[MAX_URL];
+			memset(sslist, '\0', MAX_URL);
+			recvStringFromSocket(request, incRequestSock);		
+
 			//TODO remove THIS Stepping stone IP form the list
 			
 			//TODO if !lastSS :
