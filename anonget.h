@@ -579,13 +579,13 @@ void *handleRequest(void *c)
 		//send some sort of ACK
 		char confirm[FBUFF_SIZE];
 		memset(confirm, '\0', FBUFF_SIZE);
-		if (strlen(request) < 1)
+		if (gotit)
 			sprintf(confirm, "PASS");
 		else
 			sprintf(confirm, "FAIL");
 		
 		sendStringToSocket(confirm, strlen(confirm), myC.cSock);
-	}while ( strlen(request) < 1);
+	}while (!gotit);
 		
 	printf("%s\n", request);
 	
