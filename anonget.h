@@ -29,8 +29,10 @@ pthread_mutex_t lock;
 
 typedef struct
 {
-	int incRequestSock;
+	int	cSock;
 	char myIP[INET6_ADDRSTRLEN];
+	char myName[HN_SIZE];
+
 } ClientInfo;
 
 int getRandomPort()
@@ -547,15 +549,18 @@ char** cleanGangList(char** gang)
 	return NULL;
 }
 
-bool handleRequest(int cSock, char* myIP, char* myName)
+void *handleRequest(void *c)
 {
-	printf("Got a request from socket %d\n", cSock);
+	ClientInfo myC;
+	memcpy(&myC, (ClientInfo*)c, sizeof(ClientInfo));
+
+	printf("Got a request from socket %d\n", myC.cSock);
 	
 	//recv() stepping stone list + request.
 	
 	char sslist[SSLIST_SIZE];
 	memset(sslist, '\0', SSLIST_SIZE);	
-	recvStringFromSocket(sslist, cSock);	
+	recvStringFromSocket(sslist, myC.cSock);	
 	//recvFileFromSocket("gang", cSock);	
 	
 	//printf("%s\n", sslist);
@@ -563,7 +568,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	printf("waiting for request\n");
 	char request[MAX_URL];
 	memset(request, '\0', MAX_URL);
-	recvStringFromSocket(request, cSock);	
+	recvStringFromSocket(request, myC.cSock);	
 			
 	printf("%s\n", request);
 	
@@ -582,12 +587,12 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	for (int i = 1; i < gangSize+1; ++i)
 	{
 		//printf("gang[%d] = %s\n", i, ourGang[i]);
-		if ( strstr(ourGang[i], myIP) )
+		if ( strstr(ourGang[i], myC.myIP) )
 		{
 			myIndex = i;
 			break;
 		}  
-		else if ( strstr(ourGang[i], myName) )
+		else if ( strstr(ourGang[i], myC.myName) )
 		{
 			myIndex = i;
 			break;
@@ -665,12 +670,12 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	strcat(request, " Hello! I'm Stepping Stone ");
 	strcat(request, relay);
 
-	sendStringToSocket(request, strlen(request), cSock);
+	sendStringToSocket(request, strlen(request), myC.cSock);
 
 	//TODO:  best place to free gang>?  properly freed gang?
 	ourGang = cleanGangList(ourGang);		
-	close(cSock);
-	return true;
+	close(myC.cSock);
+	pthread_exit(NULL);
 }
 
 #endif

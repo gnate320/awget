@@ -40,39 +40,60 @@ int main(int argc, const char *argv[]) {
 	//	close(conSock);
 	//	exit(1);
 //	}	
-
-	while (true)	
+	
+	//TODO make runtime condition maybe....
+	while (true)
 	{
-
-		struct sockaddr_storage incReqAddr;		//address info for incoming request
-		socklen_t incReqSockSize = sizeof(incReqAddr);
-			
-		pthread_mutex_lock(&lock);
-		int incRequestSock = accept(conSock, (struct sockaddr *) &incReqAddr, &incReqSockSize);
-		char incReqIP[INET6_ADDRSTRLEN];
-
-		if (incRequestSock == -1)
+		ClientInfo clients[SERV_QS];
+		pthread_t threads[SERV_QS];
+		
+		long tID = 0;
+		int rc;
+		while (tID < SERV_QS)	
 		{
-			printf("Error accepting request...");
-			close(conSock);
-			close(incRequestSock);
-			//TODO:  Don't exit program, just jump back to top of loop
-			return 1;
-		}
-		pthread_mutex_unlock(&lock);
-						
-		printf("Accpeted connection on socket: %d\n", incRequestSock);		
-
-		//translate the addr struct to a string with IP
-		//inet_ntop(incReqAddr.ss_family,
-		//	getIP((struct sockaddr *)&incReqAddr),
-		//	incReqIP, sizeof(incReqIP));
+			struct sockaddr_storage incReqAddr;		//address info for incoming request
+			socklen_t incReqSockSize = sizeof(incReqAddr);
 			
-		handleRequest(incRequestSock, myIPstr, myName);
-		close(incRequestSock);
+			pthread_mutex_lock(&lock);
+			int incRequestSock = accept(conSock, (struct sockaddr *) &incReqAddr, &incReqSockSize);
+			char incReqIP[INET6_ADDRSTRLEN];
 
+			if (incRequestSock == -1)
+			{
+				printf("Error accepting request...");
+				close(conSock);
+				close(incRequestSock);
+				//TODO:  Don't exit program, just jump back to top of loop
+				return 1;
+			}
+			pthread_mutex_unlock(&lock);
+						
+			printf("Accpeted connection on socket: %d\n", incRequestSock);		
+
+			//translate the addr struct to a string with IP
+			//inet_ntop(incReqAddr.ss_family,
+			//	getIP((struct sockaddr *)&incReqAddr),
+			//	incReqIP, sizeof(incReqIP));
+			
+			clients[tID].cSock = incRequestSock;
+			strcpy(clients[tID].myIP, myIPstr);
+			strcpy(clients[tID].myName, myName);
+			
+			rc = pthread_create(&threads[tID], NULL,
+					handleRequest, (void*) &clients[tID]);			
+			if (rc)
+			{
+				printf("error creating thread\n");
+			}
+
+			tID++;
+			//TODO: close sock ete or in thread?
+			//close(incRequestSock);
+		}
+
+		//TODO collect threads
 	}
 
 	close(conSock);
-	//pthread_exit(NULL);
+	pthread_exit(NULL);
 }
