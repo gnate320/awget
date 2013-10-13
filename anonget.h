@@ -547,7 +547,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	printf("waiting for request\n");
 	char request[FBUFF_SIZE];
 	memset(request, '\0', FBUFF_SIZE);
-	recv(cSock, request, FBUFF_SIZE, 0);	
+	recvStringFromSock(request, cSock);	
 			
 	printf("%s\n", request);
 	
@@ -583,7 +583,10 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	ourGang[myIndex] = ourGang[gangSize];
 	ourGang[gangSize] = nextIP;
 	gangSize--;
-			
+	
+	char relay[SSLIST_SIZE];
+	memset(relay, '\0', SSLIST_SIZE);
+		
 	if (gangSize > 0)
 	{
 		//TODO get random SS
@@ -617,7 +620,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 		sendStringToSocket(passableSSList, strlen(passableSSList), nextSS);
 
 		//send request
-		send(nextSS, request, FBUFF_SIZE, 0);
+		sendStringToSocket(request, strlen(request0, nextSS);
 		
 		free(passableSSList);
 		free(nextIP);
@@ -625,12 +628,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 
 		//TODO recv() file "package" as "result"
 		//recvStringFromSocket()
-		char relay[SSLIST_SIZE];
-		memset(relay, '\0', SSLIST_SIZE);
-		int numbytes;
-		if ((numbytes = recv(nextSS, relay, SSLIST_SIZE, 0)) ==-1)
-			perror("revc from nextSS");
-				
+		recvStringFromSocket(relay, nextSS);	
 
 	}
 	//TODO else lastSS
@@ -649,10 +647,9 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	
 	
 	strcat(request, " Hello! I'm Stepping Stone ");
-	if (send(cSock, request, FBUFF_SIZE, 0) == -1) 
-	{
-		printf("Error sending...");
-	}
+	strcat(request, relay);
+
+	sendStringToSocket(request, strlen(request), cSock);
 
 	//TODO:  best place to free gang>?  properly freed gang?
 	ourGang = cleanGangList(ourGang);		

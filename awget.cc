@@ -21,8 +21,8 @@ int main(int argc, const char *argv[]) {
 
 	
 	//TODO: pull random name from chaingang file;
-	//toSS = prepConnectedSocket("cabbage.cs.colostate.edu", "4649");	
-	toSS = prepConnectedSocket("Nataku-U52F", "4649");	
+	toSS = prepConnectedSocket("cabbage.cs.colostate.edu", "4649");	
+	//toSS = prepConnectedSocket("Nataku-U52F", "4649");	
 	
 	//Send your gang to the first SS
 	printf("sending chaingang...\n");
@@ -39,7 +39,7 @@ int main(int argc, const char *argv[]) {
 	memset(request, '\0', FBUFF_SIZE);
 	strcat(request, argv[1]);
 	printf("sending request: %s\n", request);
-	send(toSS, request, FBUFF_SIZE, 0);
+	sendStringToSock(request, strlen(request), toSS);
 
 	printf("waiting for response..\n");	
 
