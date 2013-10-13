@@ -29,18 +29,14 @@ int main(int argc, const char *argv[]) {
 	sendFileToSocket("chaingang", toSS);	
 
 	//send size of (must send size to follow SS protocol)
-	char request[FBUFF_SIZE];
-	//memset(request, '\0', FBUFF_SIZE);
-	//sprintf(request, "%u", strlen(argv[1]));
-	//printf("sending: %s\n", request);
-	//send(toSS, request, FBUFF_SIZE, 0);	
+	char request[MAX_URL];
 
 	//send the request
-	memset(request, '\0', FBUFF_SIZE);
+	memset(request, '\0', MAX_URL);
 	strcat(request, argv[1]);
 
 		
-	char confirm[FBUFF_SIZE];
+	char confirm[MAX_URL];
 	do
 	{
 		printf("sending request: %s\n", request);

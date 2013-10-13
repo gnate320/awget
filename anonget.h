@@ -570,7 +570,7 @@ void *handleRequest(void *c)
 	{
 		printf("waiting for request\n");
 		memset(request, '\0', MAX_URL);
-		recvStringFromSocket(request, myC.cSock);	
+		strcpy(request, recvStringFromSocket(request, myC.cSock));	
 
 		//send some sort of ACK
 		char confirm[FBUFF_SIZE];
