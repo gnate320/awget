@@ -38,8 +38,19 @@ int main(int argc, const char *argv[]) {
 	//send the request
 	memset(request, '\0', FBUFF_SIZE);
 	strcat(request, argv[1]);
-	printf("sending request: %s\n", request);
-	sendStringToSocket(request, strlen(request), toSS);
+
+		
+	char confirm[FBUFF_SIZE];
+	do
+	{
+		printf("sending request: %s\n", request);
+		sendStringToSocket(request, strlen(request), toSS);
+	
+		//Get some sort of ACK
+		memset(confirm, '\0', FBUFF_SIZE);
+		recvStringFromSocket(confirm, toSS);
+		
+	}while ( strstr(confirm, "FAIL") );
 
 	printf("waiting for response..\n");	
 

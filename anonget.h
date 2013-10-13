@@ -565,11 +565,24 @@ void *handleRequest(void *c)
 	
 	//printf("%s\n", sslist);
 
-	printf("waiting for request\n");
 	char request[MAX_URL];
-	memset(request, '\0', MAX_URL);
-	recvStringFromSocket(request, myC.cSock);	
-			
+	do
+	{
+		printf("waiting for request\n");
+		memset(request, '\0', MAX_URL);
+		recvStringFromSocket(request, myC.cSock);	
+
+		//send some sort of ACK
+		char confirm[FBUFF_SIZE];
+		memset(confirm, '\0', FBUFF_SIZE);
+		if (strlen(request) < 1)
+			sprintf(confirm, "PASS");
+		else
+			sprintf(confirm, "FAIL");
+		
+		sendStringToSocket(confirm, strlen(confirm), myC.cSock);
+	}while ( strlen(request) < 1);
+		
 	printf("%s\n", request);
 	
 			
@@ -641,8 +654,18 @@ void *handleRequest(void *c)
 		sendStringToSocket(passableSSList, strlen(passableSSList), nextSS);
 
 		//send request
-		sendStringToSocket(request, strlen(request), nextSS);
 		
+		char confirm[FBUFF_SIZE];
+		do
+		{
+			sendStringToSocket(request, strlen(request), nextSS);
+			
+			//Get some sort of ACK
+			memset(confirm, '\0', FBUFF_SIZE);
+			recvStringFromSocket(confirm, nextSS);
+		
+	    }while ( strstr(confirm, "FAIL") );
+
 		//free(passableSSList);
 		free(nextIP);
 		free(nextPort);		
