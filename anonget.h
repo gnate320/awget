@@ -553,8 +553,8 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	//printf("%s\n", sslist);
 
 	printf("waiting for request\n");
-	char request[FBUFF_SIZE];
-	memset(request, '\0', FBUFF_SIZE);
+	char request[MAX_URL];
+	memset(request, '\0', MAX_URL);
 	recvStringFromSocket(request, cSock);	
 			
 	printf("%s\n", request);
