@@ -547,7 +547,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 	printf("waiting for request\n");
 	char request[FBUFF_SIZE];
 	memset(request, '\0', FBUFF_SIZE);
-	recvStringFromSock(request, cSock);	
+	recvStringFromSocket(request, cSock);	
 			
 	printf("%s\n", request);
 	
@@ -620,7 +620,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 		sendStringToSocket(passableSSList, strlen(passableSSList), nextSS);
 
 		//send request
-		sendStringToSocket(request, strlen(request0, nextSS);
+		sendStringToSocket(request, strlen(request), nextSS);
 		
 		free(passableSSList);
 		free(nextIP);
