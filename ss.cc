@@ -21,14 +21,14 @@ int main(int argc, const char *argv[]) {
 	printf("%s listening on	%s\n", myIPstr, incPort);
 	
 	//wait for a connection.
-	pthread_mutex_lock(&lock);
+	//pthread_mutex_lock(&lock);
 	if (listen(conSock, SERV_QS) == -1)
 	{
 		printf("Listen failed...");
 		close(conSock);
 		return 1;	
 	}
-	pthread_mutex_unlock(&lock);
+	//pthread_mutex_unlock(&lock);
 
 //	struct sigaction sa;
 //	sa.sa_handler = sigchld_handler;  //beej says reap dead processes	
@@ -54,7 +54,7 @@ int main(int argc, const char *argv[]) {
 			struct sockaddr_storage incReqAddr;		//address info for incoming request
 			socklen_t incReqSockSize = sizeof(incReqAddr);
 			
-			pthread_mutex_lock(&lock);
+			//pthread_mutex_lock(&lock);
 			int incRequestSock = accept(conSock, (struct sockaddr *) &incReqAddr, &incReqSockSize);
 			char incReqIP[INET6_ADDRSTRLEN];
 
@@ -66,7 +66,7 @@ int main(int argc, const char *argv[]) {
 				//TODO:  Don't exit program, just jump back to top of loop
 				return 1;
 			}
-			pthread_mutex_unlock(&lock);
+			//pthread_mutex_unlock(&lock);
 						
 			printf("Accpeted connection on socket: %d\n", incRequestSock);		
 
