@@ -246,6 +246,64 @@ int prepConnectedSocket(const char* hostname, const char* port)
 //http://stackoverflow.com/questions/5594042/c-send-file-to-socket
 //http://stackoverflow.com/questions/11952898/c-send-and-receive-file
 //Usage:  Send a given file (fname), to a socket (outSock).
+bool sendStringToSocket(char *message, int size, int outSock)
+{
+	
+	char fdata[FBUFF_SIZE];
+    //struct stat fstats;
+	//stat(fname, &fstats); 
+	
+	if (size < 1)
+	{
+		printf("Error sending string '%s' 0 size?\n", message);
+		return false;
+	}    
+
+	//send the file length
+	memset(fdata, '\0', FBUFF_SIZE);
+	printf("sending size: %u\n", size);
+	sprintf(fdata, "%u", size);
+	//printf("sent as: %s\n", fdata);
+
+	//TODO loop>?
+	int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	if (len < 0 )
+	{
+		printf("Could not send string size for '%s'\n", message);
+		return false;
+	}
+
+	printf("sending...\n");	
+	size_t nbytes = 0;				//read this iteration
+	size_t tbytes = 0;				//read total
+	while ( tbytes < size )
+	{
+		strncpy(fdata, message+tbytes, FBUFF_SIZE);
+		tbytes += FBUFF_SIZE;
+		nbytes = FBUFF_SIZE;
+		printf("read: %d, totalread: %d\n", FBUFF_SIZE, tbytes);
+		int offset = 0;
+		int sent = 0;		//sent this interation
+		while ( ((sent = send(outSock, fdata+offset, FBUFF_SIZE-offset, 0) ) > 0 				|| (sent == -1 && errno == EINTR)) && (nbytes > 0) )
+		{
+			if (sent > 0) 
+			{
+				offset += sent;
+				nbytes -= sent;
+			}
+			
+			printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
+		}
+	}		
+
+	return true;
+}
+
+
+//This function is inpired by TWO StackOverFlow post:
+//http://stackoverflow.com/questions/5594042/c-send-file-to-socket
+//http://stackoverflow.com/questions/11952898/c-send-and-receive-file
+//Usage:  Send a given file (fname), to a socket (outSock).
 bool sendFileToSocket(char *fname, int outSock)
 {
 	
@@ -403,40 +461,43 @@ char** makeGangList(char *gdata)
 
 	char* s = gdata;
 	char end[67];
+	//valid characters in an addess and port (list entry)
 	strcpy(end,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,1234567890<>");
 
-	printf("inside make gang list buffer is:\n%s\n", s);
+	//printf("inside make gang list buffer is:\n%s\n", s);
 	
-	//char *token = NULL;
-	//token = strtok(gdata, "\n");
 	int count = 0;
 	int span = 0;
 	int i = 0;
 
-	//char* temp = malloc(sizeof(char*));
+	//grab the number of nodes form the list
+	char temp[PORT_LEN];
+	memset(temp, '\0', PORT_LEN);
 	span = strspn(s, end);
+	strncpy(temp, s, span);
+	count = atoi(temp);
+	//printf("span is:%d\n", span);	
+	//printf("size is:%d\n", count);
+	//printf("s points to %s\n", s);
 	
-	printf("span is:%d\n", span);	
-	printf("size is:%d\n", count);
-	printf("s points to %s\n", s);
-			
-	
+		
+	//create array of correct size
 	char** gang = (char**)malloc(sizeof(char*) * count+1);
 	if (gang == NULL)
 		return NULL;
+	
+	//create the first element stuff in it the size of the list
 	gang[0] = (char*) malloc(PORT_LEN);
 	if (gang[0] == NULL)
 		return NULL;
 	memset(gang[0], '\0', PORT_LEN);
-	strncpy(gang[0], s, span); 	
-	s = s+(span+1)*sizeof(char);
-	count = atoi(gang[0]);
+	strcpy(gang[0], temp);
 
-	//strcpy(gang[0], temp);
-	//free(temp);
+	//move up the list
+	s = s+(span+1)*sizeof(char);
 	i++;
 	
-	printf("gang[0]: %s\n", gang[0]);
+	//printf("gang[0]: %s\n", gang[0]);
 	while (i < count+1) 
 	{
 		gang[i] = (char*) malloc(INET6_ADDRSTRLEN+PORT_LEN+3);
@@ -445,14 +506,13 @@ char** makeGangList(char *gdata)
 		memset(gang[i], '\0', (INET6_ADDRSTRLEN+PORT_LEN+3));
 		span = strspn(s, end);
 		strncpy(gang[i], s, span);
-		printf("span is: %d\n", span);
-		printf("gang[%d]: %s\n", i, gang[i]);
+		//printf("span is: %d\n", span);
+		//printf("gang[%d]: %s\n", i, gang[i]);
 		i++;
 		if(i < count+1)
 			s = s+(span+1)*sizeof(char);
 	}
 	
-	//strncpy(gang[i], s, end-s); 
 			
 	return gang;
 }
@@ -471,7 +531,7 @@ char** cleanGangList(char** gang)
 	return NULL;
 }
 
-bool handleRequest(int cSock)
+bool handleRequest(int cSock, char* myIP, char* myName)
 {
 	printf("Got a request from socket %d\n", cSock);
 	
@@ -495,27 +555,98 @@ bool handleRequest(int cSock)
 	//convert SSlist data to array of SS data
 	char** ourGang = NULL;
 	ourGang = makeGangList(sslist);
+	
+	
+	// remove THIS Stepping stone IP form the list
 	int gangSize = atoi(ourGang[0]);
-	printf("got the gang! size is:%d\n", gangSize);
+	int myIndex;
+	char* nextIP;
+	char* nextPort;
+
 	for (int i = 1; i < gangSize+1; ++i)
 	{
-		printf("gang[%d] = %s\n", i, ourGang[i]);
+		//printf("gang[%d] = %s\n", i, ourGang[i]);
+		if ( strstr(ourGang[i], myIP) )
+		{
+			myIndex = i;
+			break;
+		}  
+		else if ( strstr(ourGang[i], myName) )
+		{
+			myIndex = i;
+			break;
+		}
 	}	
 
-	//TODO remove THIS Stepping stone IP form the list
+	//Put this SS at the end of the list;
+	nextIP = ourGang[myIndex];
+	ourGang[myIndex] = ourGang[gangSize];
+	ourGang[gangSize] = nextIP;
+	gangSize--;
 			
-	//TODO if !lastSS :
-		//TODO look up next SS
+	if (gangSize > 0)
+	{
+		//TODO get random SS
+		
+		char end[67];
+		memset(end, '\0', 67);
+		strcpy(end,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.1234567890<>");
+		nextIP = (char*) malloc(INET6_ADDRSTRLEN);
+		memset(nextIP, '\0', INET6_ADDRSTRLEN);
+		nextPort = (char*) malloc(PORT_LEN);
+		memset(nextPort, '\0', PORT_LEN);
+		int offset = strspn(ourGang[1], end);
+		strncpy(nextIP, ourGang[1], offset);
+		strncpy(nextPort, ourGang[1]+offset, PORT_LEN);
+		
 		//TODO Connect to next SS
+		int nextSS = prepConnectedSocket(nextIP, nextPort);
+
 		//TODO send SS list with request
+
+		char* passableSSList = (char*) malloc(SSLIST_SIZE);
+		memset(passableSSList, '\0', SSLIST_SIZE);
+		strcat(passableSSList, gangSize+"\n");
+		for (int i = 1; i < gangSize+1; i++)
+		{
+			strcat(passableSSList, ourGang[i]);
+		}
+		
+		//sendList
+		sendStringToSocket(passableSSList, strlen(passableSSList), nextSS);
+
+		//send request
+		send(nextSS, request, FBUFF_SIZE, 0);
+		
+		free(passableSSList);
+		free(nextIP);
+		free(nextPort);		
+
 		//TODO recv() file "package" as "result"
+		//recvStringFromSocket()
+		char relay[SSLIST_SIZE];
+		memset(relay, '\0', SSLIST_SIZE);
+		int numbytes;
+		if ((numbytes = recv(nextSS, relay, SSLIST_SIZE, 0)) ==-1)
+			perror("revc from nextSS");
+				
+
+	}
 	//TODO else lastSS
+	else
+	{
 		//TODO system.wget(request)
 		//TODO "package" as "result"
-			
-		//TODO send(result) to incRequestSock
+		
+		
+	}
+
+	//TODO send(result) to incRequestSock
+	
 	
 	printf("relaying response...");	
+	
+	
 	strcat(request, " Hello! I'm Stepping Stone ");
 	if (send(cSock, request, FBUFF_SIZE, 0) == -1) 
 	{

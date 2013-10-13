@@ -68,7 +68,7 @@ int main(int argc, const char *argv[]) {
 		//	getIP((struct sockaddr *)&incReqAddr),
 		//	incReqIP, sizeof(incReqIP));
 			
-		handleRequest(incRequestSock);
+		handleRequest(incRequestSock, myIPstr, myName);
 		close(incRequestSock);
 
 	}
