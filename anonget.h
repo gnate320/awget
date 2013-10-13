@@ -606,7 +606,8 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 
 		char* passableSSList = (char*) malloc(SSLIST_SIZE);
 		memset(passableSSList, '\0', SSLIST_SIZE);
-		strcat(passableSSList, gangSize+"\n");
+		sprintf(passableSSList, "%d\n", gangSize);
+		//strcat(passableSSList, gangSize+"\n");
 		for (int i = 1; i < gangSize+1; i++)
 		{
 			strcat(passableSSList, ourGang[i]);
