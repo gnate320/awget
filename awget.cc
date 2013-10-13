@@ -39,7 +39,7 @@ int main(int argc, const char *argv[]) {
 	memset(request, '\0', FBUFF_SIZE);
 	strcat(request, argv[1]);
 	printf("sending request: %s\n", request);
-	sendStringToSock(request, strlen(request), toSS);
+	sendStringToSocket(request, strlen(request), toSS);
 
 	printf("waiting for response..\n");	
 
