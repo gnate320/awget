@@ -386,7 +386,8 @@ bool recvFileFromSocket(char* fname, int inSock)
 	printf("About to recv on socket: %d\n", inSock);
 	
 
-	int fsize = 0;
+	int fsize = 0;	
+	do
 	{
 			
 		pthread_mutex_lock(&lock);
@@ -437,6 +438,7 @@ char* recvStringFromSocket(char* message, int inSock)
 	int rbytes = FBUFF_SIZE;
 		
 	int fsize = 0;
+	do
 	{		
 		pthread_mutex_lock(&lock);
 		do	
