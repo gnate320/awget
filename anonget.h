@@ -263,7 +263,7 @@ bool sendStringToSocket(char *message, int size, int outSock)
 	memset(fdata, '\0', FBUFF_SIZE);
 	printf("sending size: %u\n", size);
 	sprintf(fdata, "%u", size);
-	//printf("sent as: %s\n", fdata);
+	printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
 	int len = send(outSock, fdata, FBUFF_SIZE, 0);
