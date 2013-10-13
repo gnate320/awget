@@ -266,7 +266,11 @@ bool sendStringToSocket(char *message, int size, int outSock)
 	printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	do
+	{
+		int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	}while (len == -1);
+
 	if (len < 0 )
 	{
 		printf("Could not send string size for '%s'\n", message);
@@ -325,7 +329,11 @@ bool sendFileToSocket(char *fname, int outSock)
 	printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	do
+	{
+		int len = send(outSock, fdata, FBUFF_SIZE, 0);
+	}while(len == -1);
+
 	if (len < 0 )
 	{
 		printf("Could not send file size for '%s'\n", fname);
