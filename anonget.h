@@ -596,7 +596,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 		nextPort = (char*) malloc(PORT_LEN);
 		memset(nextPort, '\0', PORT_LEN);
 		int offset = strspn(ourGang[1], end)+1;
-		strncpy(nextIP, ourGang[1], offset);
+		strncpy(nextIP, ourGang[1], offset-1);
 		strncpy(nextPort, ourGang[1]+offset, PORT_LEN);
 		
 		//TODO Connect to next SS
