@@ -406,7 +406,9 @@ bool recvFileFromSocket(char* fname, int inSock)
 	rbytes = fsize; 	//remaining bytes
 
 	printf("file size is %d\n",fsize);
-		
+	if (fsize == 0)
+		return false;	
+	
 	do 
 	{
 		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0);
@@ -427,7 +429,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 	return true;
 }
 
-char* recvStringFromSocket(char* message, int inSock)
+bool recvStringFromSocket(char* message, int inSock)
 {
 	char fdata[FBUFF_SIZE];
 	memset(fdata, '\0', FBUFF_SIZE);
@@ -446,13 +448,14 @@ char* recvStringFromSocket(char* message, int inSock)
 		}
 	}while ( rbytes > 0 );
 	pthread_mutex_unlock(&lock);
-
-	fsize = atoi(fdata);
-
 	fsize = atoi(fdata);	
-   	printf("data came in as %s\n", fdata); 	
+   	
+	printf("data came in as %s\n", fdata); 	
 	printf("file size recved is %d\n",fsize);
 	
+	if (fsize == 0)
+		return false;	
+
 	nbytes = 0;			//bytes this iteration
 	rbytes = fsize; 		//remaining bytes
 	
@@ -471,7 +474,7 @@ char* recvStringFromSocket(char* message, int inSock)
 
 	
 	printf("received: %s\n", message);		
-	return message;
+	return true;
 }
 
 char** makeGangList(char *gdata)
@@ -566,11 +569,12 @@ void *handleRequest(void *c)
 	//printf("%s\n", sslist);
 
 	char request[MAX_URL];
+	bool gotit	= false;
 	do
 	{
 		printf("waiting for request\n");
 		memset(request, '\0', MAX_URL);
-		strcpy(request, recvStringFromSocket(request, myC.cSock));	
+		gotit = recvStringFromSocket(request, myC.cSock);	
 
 		//send some sort of ACK
 		char confirm[FBUFF_SIZE];
