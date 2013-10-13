@@ -607,7 +607,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 
 		//TODO send SS list with request
 
-		char* passableSSList = (char*) malloc(SSLIST_SIZE);
+		char passableSSList[SSLIST_SIZE];
 		memset(passableSSList, '\0', SSLIST_SIZE);
 		sprintf(passableSSList, "%d\n", gangSize);
 		//strcat(passableSSList, gangSize+"\n");
@@ -622,7 +622,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 		//send request
 		sendStringToSocket(request, strlen(request), nextSS);
 		
-		free(passableSSList);
+		//free(passableSSList);
 		free(nextIP);
 		free(nextPort);		
 
