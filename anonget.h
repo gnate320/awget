@@ -595,7 +595,7 @@ bool handleRequest(int cSock, char* myIP, char* myName)
 		memset(nextIP, '\0', INET6_ADDRSTRLEN);
 		nextPort = (char*) malloc(PORT_LEN);
 		memset(nextPort, '\0', PORT_LEN);
-		int offset = strspn(ourGang[1], end);
+		int offset = strspn(ourGang[1], end)+1;
 		strncpy(nextIP, ourGang[1], offset);
 		strncpy(nextPort, ourGang[1]+offset, PORT_LEN);
 		
