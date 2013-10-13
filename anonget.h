@@ -386,23 +386,19 @@ bool recvFileFromSocket(char* fname, int inSock)
 	printf("About to recv on socket: %d\n", inSock);
 	
 
-	int fsize = 0;	
-	do
-	{
-			
-		pthread_mutex_lock(&lock);
-		do	
+	int fsize = 0;		
+	pthread_mutex_lock(&lock);
+	do	
+	{	
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
+		if (nbytes > 0)
 		{	
-			nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
-			if (nbytes > 0)
-			{	
-				rbytes -= nbytes;
-			}
-		}while ( rbytes > 0 );
-		pthread_mutex_unlock(&lock);
+			rbytes -= nbytes;
+		}
+	}while ( rbytes > 0 );
+	pthread_mutex_unlock(&lock);
 
-		fsize = atoi(fdata);
-	}while (fsize == 0);
+	fsize = atoi(fdata);
 	
 	nbytes = 0;			//bytes this iteration
 	rbytes = fsize; 	//remaining bytes
@@ -438,21 +434,18 @@ char* recvStringFromSocket(char* message, int inSock)
 	int rbytes = FBUFF_SIZE;
 		
 	int fsize = 0;
-	do
-	{		
-		pthread_mutex_lock(&lock);
-		do	
+	pthread_mutex_lock(&lock);
+	do	
+	{	
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
+		if (nbytes > 0)
 		{	
-			nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
-			if (nbytes > 0)
-			{	
-				rbytes -= nbytes;
-			}
-		}while ( rbytes > 0 );
-		pthread_mutex_unlock(&lock);
+			rbytes -= nbytes;
+		}
+	}while ( rbytes > 0 );
+	pthread_mutex_unlock(&lock);
 
-		fsize = atoi(fdata);
-	}while (fsize == 0);
+	fsize = atoi(fdata);
 
 	fsize = atoi(fdata);	
    	printf("data came in as %s\n", fdata); 	
