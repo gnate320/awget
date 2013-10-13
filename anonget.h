@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string.h>  //for the damned memset(), stupid C crap.
 #include <time.h>
+#include <pthread.h>
 
 #define HN_SIZE 63
 #define PORT_LEN 6
@@ -22,6 +23,15 @@
 #define SSLIST_SIZE 6144
 #define MAX_URL 1024
 #define FBUFF_SIZE	512
+
+//GLobal locks
+pthread_mutex_t lock;
+
+typedef struct
+{
+	int incRequestSock;
+	char myIP[INET6_ADDRSTRLEN];
+} ClientInfo;
 
 int getRandomPort()
 {
@@ -242,7 +252,7 @@ bool sendFileToSocket(char *fname, int outSock)
 	FILE *fin = fopen(fname, "r");
 	char fdata[FBUFF_SIZE];
     struct stat fstats;
-	fstat(fin, &fstats); 
+	stat(fname, &fstats); 
 	
 	if (fstats.st_size < 1)
 	{
@@ -252,7 +262,9 @@ bool sendFileToSocket(char *fname, int outSock)
 
 	//send the file length
 	memset(fdata, '\0', FBUFF_SIZE);
-	sprintf(fdata, "%d", fstats.st_size);
+	printf("sending size: %u\n", fstats.st_size);
+	sprintf(fdata, "%u", fstats.st_size);
+	printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
 	int len = send(outSock, fdata, FBUFF_SIZE, 0);
@@ -261,23 +273,27 @@ bool sendFileToSocket(char *fname, int outSock)
 		printf("Could not send file size for '%s'\n", fname);
 		return false;
 	}
-	
+
+	printf("sending...\n");	
 	size_t nbytes = 0;				//read this iteration
 	size_t tbytes = 0;				//read total
-	while ( (nbytes = fread(fdata, sizeof(char), FBUFF_SIZE, fin) ) > 0 /*&&
-			(tbytes < fstats.st_size) */)
+	while ( (nbytes = fread(fdata, sizeof(char), FBUFF_SIZE, fin) ) > 0  &&
+			(tbytes < fstats.st_size) )
 	{
 		tbytes += nbytes;
+		printf("read: %d, totalread: %d\n", nbytes, tbytes);
 		int offset = 0;
-		int sent = 0;
-		while ( (sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
-				(sent == -1 && errno == EINTR) )
+		int sent = 0;		//sent this interation
+		while ( ((sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
+				(sent == -1 && errno == EINTR)) && (nbytes > 0) )
 		{
 			if (sent > 0) 
 			{
 				offset += sent;
 				nbytes -= sent;
 			}
+			
+			printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
 		}
 	}	
 	
@@ -288,64 +304,228 @@ bool sendFileToSocket(char *fname, int outSock)
 
 //this function is inspired by two StackOverFlow threads
 //http://stackoverflow.com/questions/11952898/c-send-and-receive-file
-//
+//http://stackoverflow.com/questions/5594042/c-send-file-to-socket
 //Usage: get a file (fname) from a socket (inSock).
 bool recvFileFromSocket(char* fname, int inSock)
 {
 	FILE *fout = fopen(fname, "w");
 	char fdata[FBUFF_SIZE];
-
 	memset(fdata, '\0', FBUFF_SIZE);
-	int len = recv(inSock, fdata, FBUFF_SIZE, 0);
-	if (len < 0)
-	{
-		printf("error recieving file size for %s\n", fname);
-		return false;
-	}
-	int fsize = atoi(fdata);	
 	
-	int nbytes = 0;			//bytes this iteration
-	int tbytes = 0; 		//total bytes
-	do
-	{
+	int nbytes = 0;
+	int rbytes = FBUFF_SIZE;
+
+	printf("About to recv on socket: %d\n", inSock);
+	
+	pthread_mutex_lock(&lock);
+	do	
+	{	
 		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
 		if (nbytes > 0)
-		{
-			fwrite(fdata, sizeof(char), nbytes, fout);
-			tbytes += nbytes;	
+		{	
+			rbytes -= nbytes;
 		}
-	} while (tbytes < fsize);
+	}while ( rbytes > 0 );
+	pthread_mutex_unlock(&lock);
+
+	int fsize = atoi(fdata);		
+	nbytes = 0;			//bytes this iteration
+	rbytes = fsize; 	//remaining bytes
+
+	printf("file size is %d\n",fsize);
+		
+	do 
+	{
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0);
+		if (nbytes > 0)
+		{
+			if (rbytes < FBUFF_SIZE)//recv 512 bytes but that maybe too much
+				nbytes = rbytes;	
+			fwrite(fdata, sizeof(char), nbytes, fout);
+			rbytes -= nbytes;	
+			printf("wrote bytes to file?>?\n");
+		}
+		printf("recv: %d, remain: %d\n", nbytes, rbytes);
+	}while ( rbytes > 0 );
+
 
 	fclose(fout);
 
 	return true;
 }
 
-bool recvStringFromSocket(char *message, int inSock)
+char* recvStringFromSocket(char* message, int inSock)
 {
 	char fdata[FBUFF_SIZE];
-
 	memset(fdata, '\0', FBUFF_SIZE);
-	int len = recv(inSock, fdata, FBUFF_SIZE, 0);
-	if (len < 0)
-	{
-		printf("error recieving message size\n");
-		return false;
-	}
-	int fsize = atoi(fdata);	
 	
-	int nbytes = 0;			//bytes this iteration
-	int tbytes = 0; 		//total bytes
-	do
-	{
+	int nbytes = 0;
+	int rbytes = FBUFF_SIZE;
+	
+	pthread_mutex_lock(&lock);
+	do	
+	{	
 		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0); 
 		if (nbytes > 0)
-		{
-			strncat(message, fdata, nbytes);
-			tbytes += nbytes;	
+		{	
+			rbytes -= nbytes;
 		}
-	} while (tbytes < fsize);
+	}while ( rbytes > 0 );
+	pthread_mutex_unlock(&lock);
+	
+	int fsize = atoi(fdata);	
+   	printf("data came in as %s\n", fdata); 	
+	printf("file size recved is %d\n",fsize);
+	
+	nbytes = 0;			//bytes this iteration
+	rbytes = fsize; 		//remaining bytes
+	
+	do 
+	{
+		nbytes = recv(inSock, fdata, FBUFF_SIZE, 0);
+		if (nbytes > 0)
+		{
+			if (rbytes < FBUFF_SIZE)//recv 512 bytes but that maybe too much
+				nbytes = rbytes;	
+			strncat(message, fdata, nbytes);
+			rbytes -= nbytes;	
+		}
+		printf("recv: %d, remain: %d\n", nbytes, rbytes);
+	}while ( rbytes > 0 );
 
+	
+	printf("received: %s\n", message);		
+	return message;
+}
+
+char** makeGangList(char *gdata)
+{
+
+	char* s = gdata;
+	char end[67];
+	strcpy(end,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,1234567890<>");
+
+	printf("inside make gang list buffer is:\n%s\n", s);
+	
+	//char *token = NULL;
+	//token = strtok(gdata, "\n");
+	int count = 0;
+	int span = 0;
+	int i = 0;
+
+	//char* temp = malloc(sizeof(char*));
+	span = strspn(s, end);
+	
+	printf("span is:%d\n", span);	
+	printf("size is:%d\n", count);
+	printf("s points to %s\n", s);
+			
+	
+	char** gang = (char**)malloc(sizeof(char*) * count+1);
+	if (gang == NULL)
+		return NULL;
+	gang[0] = (char*) malloc(PORT_LEN);
+	if (gang[0] == NULL)
+		return NULL;
+	memset(gang[0], '\0', PORT_LEN);
+	strncpy(gang[0], s, span); 	
+	s = s+(span+1)*sizeof(char);
+	count = atoi(gang[0]);
+
+	//strcpy(gang[0], temp);
+	//free(temp);
+	i++;
+	
+	printf("gang[0]: %s\n", gang[0]);
+	while (i < count+1) 
+	{
+		gang[i] = (char*) malloc(INET6_ADDRSTRLEN+PORT_LEN+3);
+		if (gang[i] == NULL)
+			return NULL;
+		memset(gang[i], '\0', (INET6_ADDRSTRLEN+PORT_LEN+3));
+		span = strspn(s, end);
+		strncpy(gang[i], s, span);
+		printf("span is: %d\n", span);
+		printf("gang[%d]: %s\n", i, gang[i]);
+		i++;
+		if(i < count+1)
+			s = s+(span+1)*sizeof(char);
+	}
+	
+	//strncpy(gang[i], s, end-s); 
+			
+	return gang;
+}
+
+char** cleanGangList(char** gang)
+{
+	int size = atoi(gang[0]);
+	
+	for (int i = 1; i < size+1; ++i)
+	{
+		free(gang[i]);
+	}
+
+	free(gang[0]);
+	free(gang);
+	return NULL;
+}
+
+bool handleRequest(int cSock)
+{
+	printf("Got a request from socket %d\n", cSock);
+	
+	//recv() stepping stone list + request.
+	
+	char sslist[SSLIST_SIZE];
+	memset(sslist, '\0', SSLIST_SIZE);	
+	recvStringFromSocket(sslist, cSock);	
+	//recvFileFromSocket("gang", cSock);	
+	
+	//printf("%s\n", sslist);
+
+	printf("waiting for request\n");
+	char request[FBUFF_SIZE];
+	memset(request, '\0', FBUFF_SIZE);
+	recv(cSock, request, FBUFF_SIZE, 0);	
+			
+	printf("%s\n", request);
+	
+			
+	//convert SSlist data to array of SS data
+	char** ourGang = NULL;
+	ourGang = makeGangList(sslist);
+	int gangSize = atoi(ourGang[0]);
+	printf("got the gang! size is:%d\n", gangSize);
+	for (int i = 1; i < gangSize+1; ++i)
+	{
+		printf("gang[%d] = %s\n", i, ourGang[i]);
+	}	
+
+	//TODO remove THIS Stepping stone IP form the list
+			
+	//TODO if !lastSS :
+		//TODO look up next SS
+		//TODO Connect to next SS
+		//TODO send SS list with request
+		//TODO recv() file "package" as "result"
+	//TODO else lastSS
+		//TODO system.wget(request)
+		//TODO "package" as "result"
+			
+		//TODO send(result) to incRequestSock
+	
+	printf("relaying response...");	
+	strcat(request, " Hello! I'm Stepping Stone ");
+	if (send(cSock, request, FBUFF_SIZE, 0) == -1) 
+	{
+		printf("Error sending...");
+	}
+
+	//TODO:  best place to free gang>?  properly freed gang?
+	ourGang = cleanGangList(ourGang);		
+	close(cSock);
 	return true;
 }
+
 #endif

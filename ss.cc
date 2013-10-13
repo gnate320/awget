@@ -21,29 +21,33 @@ int main(int argc, const char *argv[]) {
 	printf("%s listening on	%s\n", myIPstr, incPort);
 	
 	//wait for a connection.
+	pthread_mutex_lock(&lock);
 	if (listen(conSock, SERV_QS) == -1)
 	{
 		printf("Listen failed...");
 		close(conSock);
 		return 1;	
 	}
-	
-	struct sigaction sa;
-	sa.sa_handler = sigchld_handler;  //beej says reap dead processes	
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGCHLD, &sa, NULL) == -1) 
-	{
-		printf("Error killing dead processes!?!?");
-		close(conSock);
-		exit(1);
-	}	
+	pthread_mutex_unlock(&lock);
 
-	while (true) 
+//	struct sigaction sa;
+//	sa.sa_handler = sigchld_handler;  //beej says reap dead processes	
+//	sigemptyset(&sa.sa_mask);
+//	sa.sa_flags = SA_RESTART;
+//	if (sigaction(SIGCHLD, &sa, NULL) == -1) 
+//	{
+	//	printf("Error killing dead processes!?!?");
+	//	close(conSock);
+	//	exit(1);
+//	}	
+
+	while (true)	
 	{
 
 		struct sockaddr_storage incReqAddr;		//address info for incoming request
 		socklen_t incReqSockSize = sizeof(incReqAddr);
+			
+		pthread_mutex_lock(&lock);
 		int incRequestSock = accept(conSock, (struct sockaddr *) &incReqAddr, &incReqSockSize);
 		char incReqIP[INET6_ADDRSTRLEN];
 
@@ -55,54 +59,20 @@ int main(int argc, const char *argv[]) {
 			//TODO:  Don't exit program, just jump back to top of loop
 			return 1;
 		}
-			
+		pthread_mutex_unlock(&lock);
+						
+		printf("Accpeted connection on socket: %d\n", incRequestSock);		
+
 		//translate the addr struct to a string with IP
-		inet_ntop(incReqAddr.ss_family,
-			getIP((struct sockaddr *)&incReqAddr),
-			incReqIP, sizeof(incReqIP));
-		
-		if (!fork())
-		{
-			// close conSock in child
-			close(conSock);
-			printf("Got a request from %s\n", incReqIP);
+		//inet_ntop(incReqAddr.ss_family,
+		//	getIP((struct sockaddr *)&incReqAddr),
+		//	incReqIP, sizeof(incReqIP));
 			
-			//recv() stepping stone list + request.
-			
-			char sslist[SSLIST_SIZE];
-			memset(sslist, '\0', SSLIST_SIZE);	
-			recvStringFromSocket(sslist, incRequestSock);	
-			//recv(incRequestSock, sslist, SSLIST_SIZE, 0);	
-
-			char request[MAX_URL];
-			memset(sslist, '\0', MAX_URL);
-			recvStringFromSocket(request, incRequestSock);		
-
-			//TODO remove THIS Stepping stone IP form the list
-			
-			//TODO if !lastSS :
-				//TODO look up next SS
-				//TODO Connect to next SS
-				//TODO send SS list with request
-				//TODO recv() file "package" as "result"
-			//TODO else lastSS
-				//TODO system.wget(request)
-				//TODO "package" as "result"
-			
-			//TODO send(result) to incRequestSock
-		
-			strcat(sslist, " Hello! I'm Stepping Stone ");
-			strcat(sslist, myIPstr); 
-			if (send(incRequestSock, sslist, strlen(sslist), 0) == -1) 
-			{
-				printf("Error sending to %s", incReqIP);
-			}		
-			close(incRequestSock);
-			exit(0);
-		}
+		handleRequest(incRequestSock);
 		close(incRequestSock);
+
 	}
 
 	close(conSock);
-	return 0;
+	//pthread_exit(NULL);
 }

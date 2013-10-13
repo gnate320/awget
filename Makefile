@@ -2,7 +2,7 @@
 #cs457 P2
 #awget: Anonymous wget. Stepping stone servers and awget request.
 CC = g++ 
-CFLAGS = -Wall -Wextra -ansi -gstabs -fpermissive
+CFLAGS = -Wall -Wextra -ansi -gstabs -fpermissive -pthread
 OBJS = ss.o awget.o
 
 all: $(OBJS)
