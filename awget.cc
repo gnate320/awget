@@ -109,11 +109,29 @@ int main(int argc, const char *argv[]) {
 
 	char reply[MAX_URL];
 	memset(reply, '\0', MAX_URL);
-	recvStringFromSocket(reply, toSS);	
+	//recvStringFromSocket(reply, toSS);	
 
-	//get the file
-	recvFileFromSocket(reply, toSS);
+	//get the file name
+	bool gotit = false;
+	do
+	{
+		memset(reply, '\0', MAX_URL);
+		gotit = recvStringFromSocket(reply, toSS);	
+
+		//send some sort of ACK
+		char confirm[FBUFF_SIZE];
+		memset(confirm, '\0', FBUFF_SIZE);
+		if (gotit)
+			sprintf(confirm, "PASS");
+		else
+			sprintf(confirm, "FAIL");
+		
+		sendStringToSocket(confirm, strlen(confirm), toSS);
+	}while (!gotit);
 	
+	//get the file	
+	recvFileFromSocket(reply, toSS);
+
 	printf("Recieved file <%s>\n", reply);
 
 	close(toSS);
