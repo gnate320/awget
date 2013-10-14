@@ -107,10 +107,14 @@ int main(int argc, const char *argv[]) {
 
 	printf("waiting for response..\n");	
 
-	//char reply[SSLIST_SIZE];
-	recvFileFromSocket(request, toSS);
+	char reply[MAX_URL];
+	memset(reply, '\0', MAX_URL);
+	recvStringFromSocket(reply, toSS);	
+
+	//get the file
+	recvFileFromSocket(reply, toSS);
 	
-	printf("Stepping Stone says: %s\n", request);
+	printf("Recieved file <%s>\n", reply);
 
 	close(toSS);
 }

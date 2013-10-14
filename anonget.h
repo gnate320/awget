@@ -684,32 +684,56 @@ void *handleRequest(void *c)
 
 		printf("waiting for file...\n...\n");		
 
-		//TODO recv() file "package" as "result"
-		//recvStringFromSocket()
-		recvStringFromSocket(relay, nextSS);	
+		//get file name
+		recvStringFromSocket(relay, nextSS);
+		
+		//get the file
+		recvFileFromSocket(relay, nextSS);
+		
+		//send the file to the client
+		printf("Relaying the file...\n");
+		sendFileToSocket(relay, myC.cSock);			
 
 	}
-	//TODO else lastSS
+	//else lastSS
 	else
 	{
 		printf("chainlist is empty\n");
 		printf("issueing wget for <%s>\n", request);
 
-		//TODO system.wget(request)
-		//TODO "package" as "result"
+		//DO THE CALL!!system.wget
+		char url [MAX_URL];
+		memset(url, '\0', MAX_URL);
+		strcat(url, "wget ");
+		strcat(url, request);
+		system(url);
+			
+		printf("File received!\n"); 
+			
+		printf("Relaying file...\n");	
 		
-		printf("File received!\n"); 		
+		//TODO find the result!!
+		char *fname = strrchr(request, '/') + sizeof(char);
+		if (fname == NULL)
+			fname = request;
+		
+		//send name;
+		sendStringToSocket(fname, strlen(fname), myC.cSock);
+		
+		//send file;
+		sendFileToSocket(fname, myC.cSock);		
 	}
 
 	//TODO send(result) to incRequestSock
 	
 	
-	printf("Relaying file...\n");	
 	
 	//TODO send FILE!!!
 	//strcat(request, " Hello! I'm Stepping Stone ");
-	strcat(request, relay);
-	sendStringToSocket(request, strlen(request), myC.cSock);
+	//strcat(request, relay);
+	//sendStringToSocket(request, strlen(request), myC.cSock);
+	
+	printf("Goodbye!\n");
 
 	//TODO:  best place to free gang>?  properly freed gang?
 	ourGang = cleanGangList(ourGang);		
