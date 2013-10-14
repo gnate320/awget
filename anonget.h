@@ -688,7 +688,7 @@ void *handleRequest(void *c)
 		memset(masher, '\0', MAX_URL);		
 		sprintf(masher, "%u", getRandom(PORT_LEN, PORT_MAX));
 			
-		strcat(iCallIt, request);
+		//strcat(iCallIt, request);
 		strcat(iCallIt, masher);
 
 		printf("waiting for file...\n...%s\n", iCallIt);
