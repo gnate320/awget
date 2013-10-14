@@ -627,8 +627,8 @@ void *handleRequest(void *c)
 	ourGang[gangSize] = nextIP;
 	gangSize--;
 	
-	char relay[MAX_FILE];
-	memset(relay, '\0', MAX_FILE);
+	char relay[MAX_URL];
+	memset(relay, '\0', MAX_URL);
 		
 	if (gangSize > 0)
 	{
