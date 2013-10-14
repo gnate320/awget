@@ -773,7 +773,7 @@ void *handleRequest(void *c)
 	    }while ( strstr(confirm, "FAIL") );
 
 		
-		printf("Relaying file...\n");	
+		printf("Relaying file...%s\n", fname);	
 		//send file;
 		sendFileToSocket(fname, myC.cSock);		
 	}
