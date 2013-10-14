@@ -687,7 +687,8 @@ void *handleRequest(void *c)
 		memset(iCallIt, '\0', MAX_URL);
 		char masher[MAX_URL];
 		memset(masher, '\0', MAX_URL);		
-		sprintf(masher, "%u", atoi(request)%getRandom(HN_SIZE, PORT_MIN));
+		sprintf(masher, "%u", 
+			(atoi(request)+PORT_MIN)%getRandom(HN_SIZE, PORT_MIN));
 			
 		strcat(iCallIt, request);
 		strcat(iCallIt, masher);
@@ -751,9 +752,12 @@ void *handleRequest(void *c)
 		printf("Relaying file...\n");	
 		
 		//TODO find the result!!
-		char *fname = strrchr(request, "/");
+		char fname[MAX_URL];
+		memset(fname, '\0', MAX_URL);
+		char *s = strrchr(request, '/');
+		strcpy(fname, s);
 		if (fname == NULL)
-			fname = "index.html";	
+			strcpy(fname, "index.html");	
 	
 		//send name;
 		char confirm[FBUFF_SIZE];
