@@ -757,9 +757,9 @@ void *handleRequest(void *c)
 		char* fs = (char *)malloc(sizeof(char*));
 		fs = strrchr(url, 242);
 		if (fs == NULL)
-			strcpy(fname, "index.html");	
+			sprintf(fname, "index.html");	
 		else 
-			strcpy(fname, fs);
+			sprintf(fname, "%s", fs);
 	
 		//send name;
 		char confirm[FBUFF_SIZE];
