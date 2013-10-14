@@ -23,6 +23,7 @@
 #define SSLIST_SIZE 6144
 #define MAX_URL 1024
 #define FBUFF_SIZE	512
+#define MAX_FILE 1073741824
 
 //GLobal locks
 pthread_mutex_t lock;
@@ -253,7 +254,7 @@ int prepConnectedSocket(const char* hostname, const char* port)
 //http://stackoverflow.com/questions/5594042/c-send-file-to-socket
 //http://stackoverflow.com/questions/11952898/c-send-and-receive-file
 //Usage:  Send a given file (fname), to a socket (outSock).
-bool sendStringToSocket(char *message, int size, int outSock)
+bool sendStringToSocket(char *message, size_t size, int outSock)
 {
 	
 	char fdata[FBUFF_SIZE];
@@ -273,7 +274,7 @@ bool sendStringToSocket(char *message, int size, int outSock)
 	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	int len = 0;
+	size_t len = 0;
 	do
 	{
 		len = send(outSock, fdata, FBUFF_SIZE, 0);
@@ -337,7 +338,7 @@ bool sendFileToSocket(char *fname, int outSock)
 	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	int len =0;
+	size_t len =0;
 	do
 	{
 		len = send(outSock, fdata, FBUFF_SIZE, 0);
@@ -357,8 +358,8 @@ bool sendFileToSocket(char *fname, int outSock)
 	{
 		tbytes += nbytes;
 		//printf("read: %d, totalread: %d\n", nbytes, tbytes);
-		int offset = 0;
-		int sent = 0;		//sent this interation
+		size_t offset = 0;
+		size_t sent = 0;		//sent this interation
 		while ( ((sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
 				(sent == -1 && errno == EINTR)) && (nbytes > 0) )
 		{
@@ -387,13 +388,13 @@ bool recvFileFromSocket(char* fname, int inSock)
 	char fdata[FBUFF_SIZE];
 	memset(fdata, '\0', FBUFF_SIZE);
 	
-	int nbytes = 0;
-	int rbytes = FBUFF_SIZE;
+	size_t nbytes = 0;
+	size_t rbytes = FBUFF_SIZE;
 
 	//printf("About to recv on socket: %d\n", inSock);
 	
 
-	int fsize = 0;		
+	size_t fsize = 0;		
 	pthread_mutex_lock(&lock);
 	do	
 	{	
@@ -423,7 +424,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 				nbytes = rbytes;	
 			fwrite(fdata, sizeof(char), nbytes, fout);
 			rbytes -= nbytes;	
-			printf("wrote bytes to file?>?\n");
+			//printf("wrote bytes %d to file?>?\n", nbytes);
 		}
 		//printf("recv: %d, remain: %d\n", nbytes, rbytes);
 	}while ( rbytes > 0 );
@@ -439,10 +440,10 @@ bool recvStringFromSocket(char* message, int inSock)
 	char fdata[FBUFF_SIZE];
 	memset(fdata, '\0', FBUFF_SIZE);
 	
-	int nbytes = 0;
-	int rbytes = FBUFF_SIZE;
+	size_t nbytes = 0;
+	size_t rbytes = FBUFF_SIZE;
 		
-	int fsize = 0;
+	size_t fsize = 0;
 	pthread_mutex_lock(&lock);
 	do	
 	{	
@@ -626,8 +627,8 @@ void *handleRequest(void *c)
 	ourGang[gangSize] = nextIP;
 	gangSize--;
 	
-	char relay[SSLIST_SIZE];
-	memset(relay, '\0', SSLIST_SIZE);
+	char relay[MAX_FILE];
+	memset(relay, '\0', MAX_FILE);
 		
 	if (gangSize > 0)
 	{
