@@ -664,8 +664,7 @@ void *handleRequest(void *c)
 		//sendList
 		sendStringToSocket(passableSSList, strlen(passableSSList), nextSS);
 
-		//send request
-		
+		//send request	
 		char confirm[FBUFF_SIZE];
 		do
 		{
@@ -684,8 +683,12 @@ void *handleRequest(void *c)
 
 		printf("waiting for file...\n...\n");		
 
+		char iCallIt[MAX_URL];
+		memset(iCallIt, '\0', MAX_URL);
+		strcat(iCallIt, request);
+		strcat(iCallIt, atoi(iCallIt)%PORT_LEN);		
+
 		//get file name
-		//recvStringFromSocket(relay, nextSS);
 		bool gotit	= false;
 		do
 		{
@@ -705,7 +708,7 @@ void *handleRequest(void *c)
 		}while (!gotit);
 
 		//get the file
-		recvFileFromSocket(relay, nextSS);
+		recvFileFromSocket(iCallIt, nextSS);
 
 		//send file name
 		do
@@ -721,7 +724,7 @@ void *handleRequest(void *c)
 
 		//send the file to the client
 		printf("Relaying the file...\n");
-		sendFileToSocket(relay, myC.cSock);			
+		sendFileToSocket(iCallIt, myC.cSock);			
 
 	}
 	//else lastSS
@@ -730,14 +733,14 @@ void *handleRequest(void *c)
 		printf("chainlist is empty\n");
 		printf("issueing wget for <%s>\n", request);
 
-		//DO THE CALL!!system.wget
+		//DO THE CALL!!system(wget)
 		char url [MAX_URL];
 		memset(url, '\0', MAX_URL);
 		strcat(url, "wget ");
 		strcat(url, request);
-		system(url);
-		
-		sleep(2);
+		int sys = system(url);
+	
+		//waitpid(sys, &status, WUNTRACED | WCONTINUED);
 		
 		printf("File received!\n"); 
 			
@@ -746,8 +749,8 @@ void *handleRequest(void *c)
 		//TODO find the result!!
 		char *fname = strrchr(request, "/");
 		if (fname == NULL)
-			fname = "index.html";
-		
+			fname = "index.html";	
+	
 		//send name;
 		char confirm[FBUFF_SIZE];
 		do
