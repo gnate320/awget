@@ -4,21 +4,20 @@ p2 10/13/2013
 
 Some issue to be aware of:
 
-	1. Incomplete:  SS chain sets up, last SS requests the file with awget, but is unable to send back the result. Maybe due to name conflints or file is not fully down loaded at the point where the SS appempts to send the file back.  My code is unable to determine the size of the file.
 
-	2.  chaingang file should not contain '<' or '>' characters. otherwise the reading of the chaingang will get messed up.  
+	1.  chaingang file should not contain '<' or '>' characters. otherwise the reading of the chaingang will get messed up.  
 
-	3. Likely vulnerable to buffer over flows.  God, I hate C strings.
+	2. Likely vulnerable to buffer over flows and stack smashing.  God, I hate C strings.
 
-	4. I never tested command line argument for chainfile, but i hope it works.
+	3. I never tested command line argument for chainfile, but I think it works.
 
-	5. In general I underestimated the time this project would take.  Part of the problem was I thought forking just like beej's simple client/server example would handle this project.  I thought wrong!!
+	4.  threads not joinable...
 
-	6.  threads not joinable...
+	5. possible memory leaks... damn c strings...
 
-	7. possible memory leaks... damn c strings...
+	6. Oh yeah and if an error occurs, it does not failt gently.  a error will likely make all SSs hang and they may need to be restarted to handle another request
+	7.  Max nuber of concurrent request is set by QS_SIZE macro.
 
-	8. Oh yeah and if an error occurs, it does not failt gently.  a error will likely make all SSs hang and they may need to be restarted to handle another request
-	9.  Max nuber of concurrent request is set by QS_SIZE macro.
+	8. Please let me know if you can't get the SSs to chian together....that should work at the least.
 
-	10. Please let me know if you can't get the SSs to chian together....that should work at the least.
+	9.  As of second commit everything seems to work.  Last minute phew...
