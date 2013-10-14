@@ -754,7 +754,7 @@ void *handleRequest(void *c)
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
 		char* fs = (char *)malloc(sizeof(char*));
-		fs = strrchr(url, '/');
+		fs = strrchr(url, '/') + 1;
 		if (fs == NULL)
 			sprintf(fname, "index.html");	
 		else 
