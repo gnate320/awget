@@ -730,7 +730,12 @@ void *handleRequest(void *c)
 		//send the file to the client
 		printf("Relaying the file...%s\n", iCallIt);
 		sendFileToSocket(iCallIt, myC.cSock);			
-
+		
+		memset(masher, '\0', MAX_URL);
+		strcat(masher, "rm ");
+		strcat(masher, iCallIt);	
+	
+		system(masher);
 	}
 	//else lastSS
 	else
@@ -773,9 +778,14 @@ void *handleRequest(void *c)
 	    }while ( strstr(confirm, "FAIL") );
 
 		
-		printf("Relaying file...%s\n", fname);	
+		printf("Relaying file...\n");	
 		//send file;
-		sendFileToSocket(fname, myC.cSock);		
+		sendFileToSocket(fname, myC.cSock);	
+
+		memset(url, '\0', MAX_URL);
+		strcat(url, "rm ");
+		strcat(url, fname);
+		system(url);	
 	}
 
 		
