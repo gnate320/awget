@@ -758,7 +758,7 @@ void *handleRequest(void *c)
 		if (fs == NULL)
 			strcpy(fname, "index.html");	
 		else 
-			strcpy(fname, s);
+			strcpy(fname, fs);
 	
 		//send name;
 		char confirm[FBUFF_SIZE];
