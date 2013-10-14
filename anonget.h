@@ -35,6 +35,11 @@ typedef struct
 
 } ClientInfo;
 
+int getRandom(int h, int l)
+{
+	return rand() % (h-l) + l;
+}
+
 int getRandomPort()
 {
 	return rand() % (PORT_MAX-PORT_MIN) + PORT_MIN;
