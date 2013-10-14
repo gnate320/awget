@@ -754,7 +754,7 @@ void *handleRequest(void *c)
 		//TODO find the result!!
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
-		char *s = strrchr(request, 242);
+		char *s = strrchr(request, 242)+1;
 		if (s == NULL)
 			strcpy(fname, "index.html");	
 		else 
