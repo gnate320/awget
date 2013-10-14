@@ -755,9 +755,10 @@ void *handleRequest(void *c)
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
 		char *s = strrchr(request, '/');
-		strcpy(fname, s);
-		if (fname == NULL)
+		if (s == NULL)
 			strcpy(fname, "index.html");	
+		else 
+			strcpy(fname, s);
 	
 		//send name;
 		char confirm[FBUFF_SIZE];
