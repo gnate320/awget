@@ -268,9 +268,9 @@ bool sendStringToSocket(char *message, int size, int outSock)
 
 	//send the file length
 	memset(fdata, '\0', FBUFF_SIZE);
-	printf("sending size: %u\n", size);
+	//printf("sending size: %u\n", size);
 	sprintf(fdata, "%u", size);
-	printf("sent as: %s\n", fdata);
+	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
 	int len = 0;
@@ -285,7 +285,7 @@ bool sendStringToSocket(char *message, int size, int outSock)
 		return false;
 	}
 
-	printf("sending...\n");	
+	//printf("sending...\n");	
 	size_t nbytes = 0;				//read this iteration
 	size_t tbytes = 0;				//read total
 	while ( tbytes < size )
@@ -293,7 +293,7 @@ bool sendStringToSocket(char *message, int size, int outSock)
 		strncpy(fdata, message+tbytes, FBUFF_SIZE);
 		tbytes += FBUFF_SIZE;
 		nbytes = FBUFF_SIZE;
-		printf("read: %d, totalread: %d\n", FBUFF_SIZE, tbytes);
+		//printf("read: %d, totalread: %d\n", FBUFF_SIZE, tbytes);
 		int offset = 0;
 		int sent = 0;		//sent this interation
 		while ( ((sent = send(outSock, fdata+offset, FBUFF_SIZE-offset, 0) ) > 0 				|| (sent == -1 && errno == EINTR)) && (nbytes > 0) )
@@ -304,7 +304,7 @@ bool sendStringToSocket(char *message, int size, int outSock)
 				nbytes -= sent;
 			}
 			
-			printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
+			//printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
 		}
 	}		
 
@@ -332,9 +332,9 @@ bool sendFileToSocket(char *fname, int outSock)
 
 	//send the file length
 	memset(fdata, '\0', FBUFF_SIZE);
-	printf("sending size: %u\n", fstats.st_size);
+	//printf("sending size: %u\n", fstats.st_size);
 	sprintf(fdata, "%u", fstats.st_size);
-	printf("sent as: %s\n", fdata);
+	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
 	int len =0;
@@ -349,14 +349,14 @@ bool sendFileToSocket(char *fname, int outSock)
 		return false;
 	}
 
-	printf("sending...\n");	
+	//printf("sending...\n");	
 	size_t nbytes = 0;				//read this iteration
 	size_t tbytes = 0;				//read total
 	while ( (nbytes = fread(fdata, sizeof(char), FBUFF_SIZE, fin) ) > 0  &&
 			(tbytes < fstats.st_size) )
 	{
 		tbytes += nbytes;
-		printf("read: %d, totalread: %d\n", nbytes, tbytes);
+		//printf("read: %d, totalread: %d\n", nbytes, tbytes);
 		int offset = 0;
 		int sent = 0;		//sent this interation
 		while ( ((sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
@@ -368,7 +368,7 @@ bool sendFileToSocket(char *fname, int outSock)
 				nbytes -= sent;
 			}
 			
-			printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
+			//printf("sent: %d, w/offSet: %d, remain: %d\n", sent, offset-sent, nbytes);
 		}
 	}	
 	
@@ -390,7 +390,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 	int nbytes = 0;
 	int rbytes = FBUFF_SIZE;
 
-	printf("About to recv on socket: %d\n", inSock);
+	//printf("About to recv on socket: %d\n", inSock);
 	
 
 	int fsize = 0;		
@@ -410,7 +410,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 	nbytes = 0;			//bytes this iteration
 	rbytes = fsize; 	//remaining bytes
 
-	printf("file size is %d\n",fsize);
+	//printf("file size is %d\n",fsize);
 	if (fsize == 0)
 		return false;	
 	
@@ -425,7 +425,7 @@ bool recvFileFromSocket(char* fname, int inSock)
 			rbytes -= nbytes;	
 			printf("wrote bytes to file?>?\n");
 		}
-		printf("recv: %d, remain: %d\n", nbytes, rbytes);
+		//printf("recv: %d, remain: %d\n", nbytes, rbytes);
 	}while ( rbytes > 0 );
 
 
@@ -455,8 +455,8 @@ bool recvStringFromSocket(char* message, int inSock)
 	pthread_mutex_unlock(&lock);
 	fsize = atoi(fdata);	
    	
-	printf("data came in as %s\n", fdata); 	
-	printf("file size recved is %d\n",fsize);
+	//printf("data came in as %s\n", fdata); 	
+	//printf("file size recved is %d\n",fsize);
 	
 	if (fsize == 0)
 		return false;	
@@ -474,11 +474,11 @@ bool recvStringFromSocket(char* message, int inSock)
 			strncat(message, fdata, nbytes);
 			rbytes -= nbytes;	
 		}
-		printf("recv: %d, remain: %d\n", nbytes, rbytes);
+		//printf("recv: %d, remain: %d\n", nbytes, rbytes);
 	}while ( rbytes > 0 );
 
 	
-	printf("received: %s\n", message);		
+	//printf("received: %s\n", message);		
 	return true;
 }
 
@@ -562,22 +562,19 @@ void *handleRequest(void *c)
 	ClientInfo myC;
 	memcpy(&myC, (ClientInfo*)c, sizeof(ClientInfo));
 
-	printf("Got a request from socket %d\n", myC.cSock);
+	printf("Request: ");
 	
 	//recv() stepping stone list + request.
 	
 	char sslist[SSLIST_SIZE];
 	memset(sslist, '\0', SSLIST_SIZE);	
-	recvStringFromSocket(sslist, myC.cSock);	
-	//recvFileFromSocket("gang", cSock);	
+	recvStringFromSocket(sslist, myC.cSock);		
 	
-	//printf("%s\n", sslist);
-
 	char request[MAX_URL];
 	bool gotit	= false;
 	do
 	{
-		printf("waiting for request\n");
+		//printf("waiting for request\n");
 		memset(request, '\0', MAX_URL);
 		gotit = recvStringFromSocket(request, myC.cSock);	
 
@@ -591,9 +588,11 @@ void *handleRequest(void *c)
 		
 		sendStringToSocket(confirm, strlen(confirm), myC.cSock);
 	}while (!gotit);
-		
-	printf("%s\n", request);
-	
+
+			
+
+	printf("%s...\n", request);	
+	printf("Chainlis is: \n%s\n", sslist);
 			
 	//convert SSlist data to array of SS data
 	char** ourGang = NULL;
@@ -645,6 +644,8 @@ void *handleRequest(void *c)
 		strncpy(nextIP, ourGang[1], offset-1);
 		strncpy(nextPort, ourGang[1]+offset, PORT_LEN);
 		
+		printf("next SS is <%s,%s>\n", nextIP, nextPort);
+		
 		//TODO Connect to next SS
 		int nextSS = prepConnectedSocket(nextIP, nextPort);
 
@@ -675,9 +676,12 @@ void *handleRequest(void *c)
 		
 	    }while ( strstr(confirm, "FAIL") );
 
+		
 		//free(passableSSList);
 		free(nextIP);
 		free(nextPort);		
+
+		printf("waiting for file...\n...\n");		
 
 		//TODO recv() file "package" as "result"
 		//recvStringFromSocket()
@@ -687,21 +691,23 @@ void *handleRequest(void *c)
 	//TODO else lastSS
 	else
 	{
+		printf("chainlist is empty\n");
+		printf("issueing wget for <%s>\n", request);
+
 		//TODO system.wget(request)
 		//TODO "package" as "result"
 		
-		
+		printf("File received!\n"); 		
 	}
 
 	//TODO send(result) to incRequestSock
 	
 	
-	printf("relaying response...");	
+	printf("Relaying file...\n");	
 	
-	
-	strcat(request, " Hello! I'm Stepping Stone ");
+	//TODO send FILE!!!
+	//strcat(request, " Hello! I'm Stepping Stone ");
 	strcat(request, relay);
-
 	sendStringToSocket(request, strlen(request), myC.cSock);
 
 	//TODO:  best place to free gang>?  properly freed gang?

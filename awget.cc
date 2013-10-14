@@ -79,6 +79,8 @@ int main(int argc, const char *argv[]) {
 
 	toSS = prepConnectedSocket(firstIP, firstPORT);	
 	
+	gangList = cleanGangList(gangList);	
+
 	//Send your gang to the first SS
 	printf("sending chaingang...\n");
 	sendFileToSocket(gangName, toSS);	
@@ -106,11 +108,7 @@ int main(int argc, const char *argv[]) {
 	printf("waiting for response..\n");	
 
 	//char reply[SSLIST_SIZE];
-	int numbytes;
-	if ((numbytes = recv(toSS, request, SSLIST_SIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
+	recvFileFromSocket(request, toSS);
 	
 	printf("Stepping Stone says: %s\n", request);
 

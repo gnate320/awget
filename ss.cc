@@ -30,17 +30,6 @@ int main(int argc, const char *argv[]) {
 	}
 	//pthread_mutex_unlock(&lock);
 
-//	struct sigaction sa;
-//	sa.sa_handler = sigchld_handler;  //beej says reap dead processes	
-//	sigemptyset(&sa.sa_mask);
-//	sa.sa_flags = SA_RESTART;
-//	if (sigaction(SIGCHLD, &sa, NULL) == -1) 
-//	{
-	//	printf("Error killing dead processes!?!?");
-	//	close(conSock);
-	//	exit(1);
-//	}	
-	
 	//TODO make runtime condition maybe....
 	while (true)
 	{
@@ -68,13 +57,8 @@ int main(int argc, const char *argv[]) {
 			}
 			//pthread_mutex_unlock(&lock);
 						
-			printf("Accpeted connection on socket: %d\n", incRequestSock);		
-
-			//translate the addr struct to a string with IP
-			//inet_ntop(incReqAddr.ss_family,
-			//	getIP((struct sockaddr *)&incReqAddr),
-			//	incReqIP, sizeof(incReqIP));
-			
+			//printf("Request: ");		
+	
 			clients[tID].cSock = incRequestSock;
 			strcpy(clients[tID].myIP, myIPstr);
 			strcpy(clients[tID].myName, myName);
