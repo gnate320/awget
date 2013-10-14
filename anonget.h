@@ -744,7 +744,7 @@ void *handleRequest(void *c)
 		//TODO find the result!!
 		char *fname = strrchr(request, '\');
 		if (fname == NULL)
-			fname = "index.html;
+			fname = "index.html";
 		
 		//send name;
 		char confirm[FBUFF_SIZE];
