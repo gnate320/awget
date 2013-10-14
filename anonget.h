@@ -687,7 +687,7 @@ void *handleRequest(void *c)
 		memset(iCallIt, '\0', MAX_URL);
 		char masher[MAX_URL];
 		memset(masher, '\0', MAX_URL);		
-		sprintf(masher, "%u", getRandom(PORT_LEN, HN_SIZE));
+		sprintf(masher, "%u", getRandom(PORT_LEN, PORT_MAX));
 			
 		strcat(iCallIt, request);
 		strcat(iCallIt, masher);
