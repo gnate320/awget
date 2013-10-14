@@ -736,7 +736,9 @@ void *handleRequest(void *c)
 		strcat(url, "wget ");
 		strcat(url, request);
 		system(url);
-			
+		
+		sleep(2);
+		
 		printf("File received!\n"); 
 			
 		printf("Relaying file...\n");	
