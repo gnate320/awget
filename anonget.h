@@ -754,11 +754,12 @@ void *handleRequest(void *c)
 		//TODO find the result!!
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
-		char* fs = strrchr(request, 242);
+		char* fs = (char *)malloc(sizeof(char*));
+		fs = strrchr(request, 242);
 		if (fs == NULL)
 			strcpy(fname, "index.html");	
 		else 
-			;//strcpy(fname, fs);
+			strcpy(fname, fs);
 	
 		//send name;
 		char confirm[FBUFF_SIZE];
