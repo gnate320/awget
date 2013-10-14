@@ -742,7 +742,7 @@ void *handleRequest(void *c)
 		printf("Relaying file...\n");	
 		
 		//TODO find the result!!
-		char *fname = strrchr(request, '/') + sizeof(char);
+		char *fname = strrchr(request, '/');
 		if (fname == NULL)
 			fname = request;
 		
