@@ -727,7 +727,7 @@ void *handleRequest(void *c)
 			
 
 		//send the file to the client
-		printf("Relaying the file...\n");
+		printf("Relaying the file...%s\n", iCallIt);
 		sendFileToSocket(iCallIt, myC.cSock);			
 
 	}
