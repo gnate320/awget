@@ -9,13 +9,21 @@ int main(int argc, const char *argv[]) {
 	char gangName[MAX_URL];
 	if (argc < 2)
 	{
-		printf("Usage: awget URL\n");
+		printf("Usage: awget <URL> [-c chainfile]\n");
 		return 1;
 	}
-	else if (argc == 4)
+	else if (argc == 5)
 	{
 		//TODO get gang file option;
-
+		if (getopt(argc, argv, "c:") == int('c'))
+		{
+			strcpy(gangName, optarg);
+		}
+		else		
+		{
+			printf("Usage: awget <URL> [-c chainfile]\n");
+			return 1;
+		}	
 	}
 	else
 	{
