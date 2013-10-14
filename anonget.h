@@ -685,11 +685,40 @@ void *handleRequest(void *c)
 		printf("waiting for file...\n...\n");		
 
 		//get file name
-		recvStringFromSocket(relay, nextSS);
+		//recvStringFromSocket(relay, nextSS);
+		bool gotit	= false;
+		do
+		{
+			//printf("waiting for request\n");
+			memset(relay, '\0', MAX_URL);
+			gotit = recvStringFromSocket(relay, nextSS);	
+
+			//send some sort of ACK
+			char confirm[FBUFF_SIZE];
+			memset(confirm, '\0', FBUFF_SIZE);
+			if (gotit)
+				sprintf(confirm, "PASS");
+			else
+				sprintf(confirm, "FAIL");
 		
+			sendStringToSocket(confirm, strlen(confirm), nextSS);
+		}while (!gotit);
+
 		//get the file
 		recvFileFromSocket(relay, nextSS);
+
+		//send file name
+		do
+		{
+			sendStringToSocket(relay, strlen(relay), myC.cSock);
+			
+			//Get some sort of ACK
+			memset(confirm, '\0', FBUFF_SIZE);
+			recvStringFromSocket(confirm, myC.cSock);
 		
+	    }while ( strstr(confirm, "FAIL") );
+			
+
 		//send the file to the client
 		printf("Relaying the file...\n");
 		sendFileToSocket(relay, myC.cSock);			
@@ -718,21 +747,22 @@ void *handleRequest(void *c)
 			fname = request;
 		
 		//send name;
-		sendStringToSocket(fname, strlen(fname), myC.cSock);
+		char confirm[FBUFF_SIZE];
+		do
+		{
+			sendStringToSocket(fname, strlen(fname), myC.cSock);
+			
+			//Get some sort of ACK
+			memset(confirm, '\0', FBUFF_SIZE);
+			recvStringFromSocket(confirm, myC.cSock);
 		
+	    }while ( strstr(confirm, "FAIL") );
+
 		//send file;
 		sendFileToSocket(fname, myC.cSock);		
 	}
 
-	//TODO send(result) to incRequestSock
-	
-	
-	
-	//TODO send FILE!!!
-	//strcat(request, " Hello! I'm Stepping Stone ");
-	//strcat(request, relay);
-	//sendStringToSocket(request, strlen(request), myC.cSock);
-	
+		
 	printf("Goodbye!\n");
 
 	//TODO:  best place to free gang>?  properly freed gang?
