@@ -659,6 +659,7 @@ void *handleRequest(void *c)
 		for (int i = 1; i < gangSize+1; i++)
 		{
 			strcat(passableSSList, ourGang[i]);
+			strcat(passableSSList, "\n");
 		}
 		
 		//sendList
@@ -758,8 +759,7 @@ void *handleRequest(void *c)
 		//TODO find the result!!
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
-		char* fs = (char *)malloc(sizeof(char*));
-		fs = strrchr(url, '/') + 1;
+		char* fs = strrchr(url, '/') + 1;
 		if (fs == NULL)
 			sprintf(fname, "index.html");	
 		else 

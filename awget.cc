@@ -7,6 +7,8 @@ int main(int argc, const char *argv[]) {
 
 	srand(time(NULL));	
 	char gangName[MAX_URL];
+	memset(gangName, '\0', MAX_URL);
+	
 	if (argc < 2)
 	{
 		printf("Usage: awget <URL> [-c chainfile]\n");
@@ -64,7 +66,7 @@ int main(int argc, const char *argv[]) {
 	
 	//pick one
 	int gangSize = atoi(gangList[0]);
-	int r = getRandom(1, gangSize);
+	int r = getRandom(gangSize+1, 1);
 	
 	char firstIP[INET6_ADDRSTRLEN];
 	memset(firstIP, '\0', INET6_ADDRSTRLEN);
@@ -75,6 +77,7 @@ int main(int argc, const char *argv[]) {
 
 	offset = strspn(gangList[r], end)+1;
 	strncpy(firstIP, gangList[r], offset-1);
+	//strcat(gangList[r], "\0");
 	strncpy(firstPORT, gangList[r]+offset, PORT_LEN);
 
 	toSS = prepConnectedSocket(firstIP, firstPORT);	
