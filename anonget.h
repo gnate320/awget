@@ -685,8 +685,12 @@ void *handleRequest(void *c)
 
 		char iCallIt[MAX_URL];
 		memset(iCallIt, '\0', MAX_URL);
+		char masher[MAX_URL];
+		memset(masher, '\0', MAX_URL);		
+		sprintf(masher, "%u", atoi(request)%getRandom(HN_SIZE, PORT_MIN));
+			
 		strcat(iCallIt, request);
-		strcat(iCallIt, atoi(iCallIt)%PORT_LEN);		
+		strcat(iCallIt, masher);
 
 		//get file name
 		bool gotit	= false;
