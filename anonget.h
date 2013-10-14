@@ -254,7 +254,7 @@ int prepConnectedSocket(const char* hostname, const char* port)
 //http://stackoverflow.com/questions/5594042/c-send-file-to-socket
 //http://stackoverflow.com/questions/11952898/c-send-and-receive-file
 //Usage:  Send a given file (fname), to a socket (outSock).
-bool sendStringToSocket(char *message, size_t size, int outSock)
+bool sendStringToSocket(char *message, int size, int outSock)
 {
 	
 	char fdata[FBUFF_SIZE];
@@ -274,7 +274,7 @@ bool sendStringToSocket(char *message, size_t size, int outSock)
 	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	size_t len = 0;
+	int len = 0;
 	do
 	{
 		len = send(outSock, fdata, FBUFF_SIZE, 0);
@@ -338,7 +338,7 @@ bool sendFileToSocket(char *fname, int outSock)
 	//printf("sent as: %s\n", fdata);
 
 	//TODO loop>?
-	size_t len =0;
+	int len =0;
 	do
 	{
 		len = send(outSock, fdata, FBUFF_SIZE, 0);
@@ -358,8 +358,8 @@ bool sendFileToSocket(char *fname, int outSock)
 	{
 		tbytes += nbytes;
 		//printf("read: %d, totalread: %d\n", nbytes, tbytes);
-		size_t offset = 0;
-		size_t sent = 0;		//sent this interation
+		int offset = 0;
+		int sent = 0;		//sent this interation
 		while ( ((sent = send(outSock, fdata+offset, nbytes, 0) ) > 0 ||
 				(sent == -1 && errno == EINTR)) && (nbytes > 0) )
 		{
@@ -388,13 +388,13 @@ bool recvFileFromSocket(char* fname, int inSock)
 	char fdata[FBUFF_SIZE];
 	memset(fdata, '\0', FBUFF_SIZE);
 	
-	size_t nbytes = 0;
-	size_t rbytes = FBUFF_SIZE;
+	int nbytes = 0;
+	int rbytes = FBUFF_SIZE;
 
 	//printf("About to recv on socket: %d\n", inSock);
 	
 
-	size_t fsize = 0;		
+	int fsize = 0;		
 	pthread_mutex_lock(&lock);
 	do	
 	{	
@@ -440,10 +440,10 @@ bool recvStringFromSocket(char* message, int inSock)
 	char fdata[FBUFF_SIZE];
 	memset(fdata, '\0', FBUFF_SIZE);
 	
-	size_t nbytes = 0;
-	size_t rbytes = FBUFF_SIZE;
+	int nbytes = 0;
+	int rbytes = FBUFF_SIZE;
 		
-	size_t fsize = 0;
+	int fsize = 0;
 	pthread_mutex_lock(&lock);
 	do	
 	{	
@@ -627,8 +627,8 @@ void *handleRequest(void *c)
 	ourGang[gangSize] = nextIP;
 	gangSize--;
 	
-	char relay[MAX_URL];
-	memset(relay, '\0', MAX_URL);
+	char relay[SSLIST_SIZE];
+	memset(relay, '\0', SSLIST_SIZE);
 		
 	if (gangSize > 0)
 	{
