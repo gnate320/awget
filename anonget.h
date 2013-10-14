@@ -755,7 +755,7 @@ void *handleRequest(void *c)
 		char fname[MAX_URL];
 		memset(fname, '\0', MAX_URL);
 		char* fs = (char *)malloc(sizeof(char*));
-		fs = strrchr(request, 242);
+		fs = strrchr(url, 242);
 		if (fs == NULL)
 			strcpy(fname, "index.html");	
 		else 
