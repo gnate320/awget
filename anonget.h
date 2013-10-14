@@ -681,7 +681,6 @@ void *handleRequest(void *c)
 		free(nextIP);
 		free(nextPort);		
 
-		printf("waiting for file...\n...\n");		
 
 		char iCallIt[MAX_URL];
 		memset(iCallIt, '\0', MAX_URL);
@@ -692,6 +691,8 @@ void *handleRequest(void *c)
 		strcat(iCallIt, request);
 		strcat(iCallIt, masher);
 
+		printf("waiting for file...\n...%s\n", iCallIt);
+		
 		//get file name
 		bool gotit	= false;
 		do
