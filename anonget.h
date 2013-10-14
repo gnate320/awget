@@ -749,7 +749,6 @@ void *handleRequest(void *c)
 		
 		printf("File received!\n"); 
 			
-		printf("Relaying file...\n");	
 		
 		//TODO find the result!!
 		char fname[MAX_URL];
@@ -773,6 +772,8 @@ void *handleRequest(void *c)
 		
 	    }while ( strstr(confirm, "FAIL") );
 
+		
+		printf("Relaying file...\n");	
 		//send file;
 		sendFileToSocket(fname, myC.cSock);		
 	}
